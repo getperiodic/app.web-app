@@ -2,14 +2,14 @@
   "title": "Periodic Boilerplate web-app",
   "name": "periodic.app.web-app",
   "description": "Periodic is an open source framework that optimizes the process used to develop new user interfaces and components for web based publications.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
   },
   "scripts": {
     "test": "mocha -R spec --recursive",
-    "install": "grunt copy",
+    "install": "grunt copy && cd periodic/app.web-app/",
     "uninstall": "grunt clean",
     "watch": "grunt watch"
   },
