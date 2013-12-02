@@ -1,5 +1,6 @@
 {
-  "name": "app.web-app",
+  "title": "Periodic Boilerplate web-app",
+  "name": "periodic.app.web-app",
   "description": "Periodic is an open source framework that optimizes the process used to develop new user interfaces and components for web based publications.",
   "version": "0.0.1",
   "main": "index.js",
@@ -7,9 +8,25 @@
     "node": ">=0.10.x"
   },
   "scripts": {
-    "test": "mocha -R spec --recursive"
+    "test": "mocha -R spec --recursive",
+    "install": "grunt copy",
+    "uninstall": "grunt clean",
+    "watch": "grunt watch"
   },
-  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:getperiodic/app.web-app.git"
+  },
+  "dependencies": {
+    "classie": "0.0.1",
+    "browsernizr": "~1.0.1",
+    "grunt-contrib-copy": "0.4.1",
+    "grunt-contrib-clean": "~0.5.0",
+    "util-extend": "~1.0.1",
+    "ejs": "~0.8.5",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-less": "~0.8.2"
+  },
   "devDependencies": {
     "chai": "1.5.0",
     "grunt": "0.4.1",
@@ -20,9 +37,9 @@
     "mocha": "1.9.0"
   },
   "keywords": [
-    "Amex Pub",
-    "amexpub",
-    "package",
-    "library"
+    "Periodic Decoupled Framework",
+    "ui",
+    "ux",
+    "dom"
   ]
 }

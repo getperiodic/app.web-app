@@ -5,7 +5,9 @@
  * Copyright (c) 2013 Amex Pub. All rights reserved.
  */
 
+
 'use strict';
+var exec = require('child_process').exec;
 
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -46,51 +48,47 @@ module.exports = function(grunt) {
       },
       all: [
         'Gruntfile.js',
-        'config/**/*.js',
+        'dist/**/*.js',
         'index.js',
         'lib/**/*.js',
-        'routes/**/*.js',
         'test/**/*.js'
       ]
     },
     copy: {
       main: {
         files: [
-          // includes files within path
-          // {expand: true, src: ['path/*'], dest: 'dest/', filter: 'isFile'},
-
-          // includes files within path and its sub-directories
-          {expand: true, src: ['assets/**'], dest: '../module/assets/'},
-
-          // makes all src relative to cwd
-          // {expand: true, cwd: 'path/', src: ['**'], dest: 'dest/'},
-
-          // flattens results to a single level
-          // {expand: true, flatten: true, src: ['path/**'], dest: 'dest/', filter: 'isFile'}
+          {expand: true,cwd: 'dist', src: ['**'], dest: '../../periodic/app.web-app/'},//
         ]
       }
     },
+    clean: ['../../periodic/app.web-app/'],
     watch: {
       scripts: {
         // files: '**/*.js',
         files: [
           'Gruntfile.js',
-          'config/**/*.js',
-          'app.js',
-          'lib/**/*.js',
-          'routes/**/*.js',
+          'dist/**/*.js',
           'test/**/*.js',
-          // 'public/assets/js/build/**/*.js',
-          // 'public/assets/js/build/*.js',
-          // 'public/assets/css/*.less'
+          'lib/**/*.js',
+          'dist/public/scripts/src/*.js',
+          'dist/public/stylesheets/*.less'
         ],
-        tasks: ['lint', 'test','less'],
+        tasks: ['lint', 'less'],
         options: {
           interrupt: true
         }
       }
-      // files: "./assets/stylesheets/less/*",
-      // tasks: ["less"]
+    },
+    less: {
+      development: {
+        options: {
+          paths: ["dist/public/stylesheets"],
+          yuicompress: true
+        },
+        files: {
+          "example/assets/css/app.css": "./public/assets/css/app.less"
+        }
+      }
     }
   });
 
@@ -99,9 +97,16 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-less');
 
 
   grunt.registerTask('default', ['jshint', 'simplemocha']);
   grunt.registerTask('lint', 'jshint');
   grunt.registerTask('test', 'simplemocha');
+
+  grunt.event.on('watch', function(action, filepath, target) {
+    exec("browserify "+__dirname+"/dist/public/scripts/src/main.js -o "+__dirname+"/dist/public/scripts/example.js");
+    grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
+  });
 };
+
