@@ -2,7 +2,7 @@
   "title": "Periodic Boilerplate web-app",
   "name": "periodic.app.web-app",
   "description": "Periodic is an open source framework that optimizes the process used to develop new user interfaces and components for web based publications.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -30,7 +30,7 @@
     "grunt-contrib-jshint": "0.4.3",
     "grunt-contrib-copy": "0.4.1",
     "grunt-simple-mocha": "0.4.0",
-    "grunt-jsbeautifier": "0.1.7",
+    "grunt-jsbeautifier": "0.1.7"
   },
   "devDependencies": {
     "chai": "1.5.0",
