@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "mocha -R spec --recursive",
-    "install": "grunt copy && cd periodic/app.web-app/",
+    "install": "grunt copy",
     "uninstall": "grunt clean",
     "watch": "grunt watch"
   },

@@ -10,14 +10,16 @@
   },
   "scripts": {
     "test": "mocha",
-    "start": "nodemon app.js",
+    "appdev": "nodemon app.js --env development --port 3030",
     "watch": "grunt watch"
   },
   "dependencies": {
     "express": "3.4.0",
     "ejs": "*",
     "less-middleware": "*",
-    "nodemon": "~0.7.10"
+    "nodemon": "~0.7.10",
+    "longjohn": "~0.2.2",
+    "nconf": "~0.6.9"
   },
   "devDependencies": {
     "grunt": "0.4.0",
@@ -30,7 +32,8 @@
     "should": "1.2.2",
     "express": "3.3.4",
     "ejs": "*",
-    "less-middleware": "*"
+    "less-middleware": "*",
+    "node-inspector": "~0.6.1"
   },
   "keywords": [
     "CMS",

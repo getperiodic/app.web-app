@@ -1,0 +1,8 @@
+{
+	"name": "Periodic Web App[dev]",
+	"version": "0.0.1",
+	"application":{
+		"port": "3331",
+		"environment": "development"
+	}
+}

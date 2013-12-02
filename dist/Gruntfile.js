@@ -66,6 +66,8 @@ module.exports = function(grunt) {
           'test/**/*.js',
           'config/**/*.js',
           'model/**/*.js',
+          'app.js',
+          'package.json',
           'public/scripts/src/*.js',
           'public/stylesheets/*.less'
         ],
