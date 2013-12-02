@@ -5,16 +5,15 @@
 'use strict';
 
 var express = require('express'),
-	routes = require('./routes'),
-	user = require('./routes/user'),
 	http = require('http'),
 	path = require('path'),
+	flash = require('connect-flash'),
 	configsettings = require('./config/config'),
 	appconfig = new configsettings();
 
-if(process.env.NODE_ENV !== 'production'){
-	require('longjohn');
-}
+	if(process.env.NODE_ENV !== 'production'){
+		require('longjohn');
+	}
 
 
 var app = express();
@@ -22,29 +21,128 @@ var app = express();
 // all environments
 app.set('port', appconfig.settings.get('application:port'));
 app.set('env', appconfig.settings.get('application:environment'));
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/app/views');
 app.set('view engine', 'ejs');
-app.use(express.favicon());
+
+var init = {
+	staticCaching : function(){
+		if(app.get('env') === 'development'){
+			app.use(express.static(path.join(__dirname, 'public')));
+		}
+		else{
+			app.use(express.static(path.join(__dirname, 'public'),{maxAge: 86400000}));
+		}
+	},
+	useSessions: function(){
+		if(appconfig.settings.get('sessions:enabled')){
+			if(appconfig.settings.get('sessions:type')==="mongo"){
+				var mongo = require('./config/mongo'),
+					MongoStore = require('connect-mongo')(express),
+					express_session_config = {
+					secret:'hjoiuu87go9hui',
+					maxAge: new Date(Date.now() + 3600000),
+					store: new MongoStore(
+						{url:mongo[app.get('env')].url},
+						function(err){
+							if(!err){
+								// logger.error(err || 'connect-mongodb setup ok possibly');
+								// logger.silly('connect-mongodb setup ok possibly');
+								console.log("ok mongo");
+							}
+						})
+					};
+				app.use(express.session(express_session_config));
+			}
+			else{
+				app.use(express.session());
+			}
+		}
+	},
+	userAuth: function(){
+		if(appconfig.settings.get('userauth:enabled')){
+			if(appconfig.settings.get('userauth:rememberme')){
+				// Remember Me middleware
+				app.use(function(req, res, next) {
+				    if (req.method === 'POST' && req.url === '/login') {
+						if (req.body.rememberme) {
+							req.session.cookie.maxAge = 2592000000; // 30*24*60*60*1000 Rememeber 'me' for 30 days
+						} else {
+							req.session.cookie.expires = false;
+						}
+				    }
+				    next();
+				});
+			}
+			if(appconfig.settings.get('userauth:passport')){
+				var passport = require('passport'),
+					LocalStrategy = require('passport-local').Strategy;
+				app.use(passport.initialize());
+				app.use(passport.session());
+			}
+		}
+	},
+	serverStatus: function(){
+		console.log('Express server listening on port ' + app.get('port'));
+		console.log('Running in environment: '+app.get('env'));
+	},
+	useLocals: function(){
+		app.use(function(req, res, next) {
+			res.locals.token = req.session._csrf;
+			res.locals.title = '';
+			res.locals.flash_messages = null;
+			var userdata = req.user;
+			res.locals.user = userdata;
+			next();
+		});
+	},
+	devLogErrors: function(){
+		if ('development' === app.get('env')) {
+			app.use(express.errorHandler());
+		}
+	}
+};
+
+app.use(express.favicon(__dirname + '/public/favicon.ico', { maxAge: 2592000000 }));
 app.use(express.logger('dev'));
-app.use(express.bodyParser());
+
+//use compression
+app.use(express.compress());
+
+//public dictory cache settings
+init.staticCaching();
+
+//file upload directory
+app.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/public/uploads/files' }));
 app.use(express.methodOverride());
-app.use(express.cookieParser('your secret here'));
-app.use(express.session());
+
+//use cookies
+app.use(express.cookieParser('asfdsfasds'));
+
+//use sessions
+init.useSessions();
+
+//use flash messages
+app.use(flash());
+
+//use cross script request forgery protection
+app.use(express.csrf());
+
+//use userauth
+init.userAuth();
+
+//use express routing verbs
 app.use(app.router);
+
+//use app locals
+init.useLocals();
+
+//complie less to css
 app.use(require('less-middleware')({ src: __dirname + '/public' }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
-if ('development' === app.get('env')) {
-  app.use(express.errorHandler());
-}
+init.devLogErrors();
 
-app.get('/', routes.index);
-app.get('/users', user.list);
+//routes
+require('./app/routes/index')(app);
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-  console.log('Running in environment: '+app.get('env'));
-});
-
-
+http.createServer(app).listen(app.get('port'), init.serverStatus());

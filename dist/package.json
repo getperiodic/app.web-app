@@ -19,7 +19,12 @@
     "less-middleware": "*",
     "nodemon": "~0.7.10",
     "longjohn": "~0.2.2",
-    "nconf": "~0.6.9"
+    "nconf": "~0.6.9",
+    "mongoose": "~3.8.1",
+    "connect-mongo": "~0.4.0",
+    "connect-flash": "~0.1.1",
+    "passport-local": "~0.1.6",
+    "passport": "~0.1.17"
   },
   "devDependencies": {
     "grunt": "0.4.0",

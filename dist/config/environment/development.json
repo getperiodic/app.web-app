@@ -4,5 +4,14 @@
 	"application":{
 		"port": "3331",
 		"environment": "development"
+	},
+	"sessions":{
+		"enabled":true,
+		"type":"mongo"
+	},
+	"userauth":{
+		"enabled":true,
+		"rememberme":true,
+		"passport":true
 	}
 }
