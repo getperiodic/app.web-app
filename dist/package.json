@@ -1,0 +1,45 @@
+{
+  "title": "Periodic Boilerplate web-app",
+  "name": "periodic.app.web-app",
+  "description": "Periodic is an open source framework that optimizes the process used to develop new user interfaces and components for web based publications.",
+  "version": "0.0.1",
+  "private": true,
+  "main": "app.js",
+  "engines": {
+    "node": "0.10.13"
+  },
+  "scripts": {
+    "test": "mocha",
+    "start": "nodemon app.js",
+    "watch": "grunt watch"
+  },
+  "dependencies": {
+    "express": "3.4.0",
+    "ejs": "*",
+    "less-middleware": "*",
+    "nodemon": "~0.7.10"
+  },
+  "devDependencies": {
+    "grunt": "0.4.0",
+    "grunt-contrib-jshint": "0.2.0",
+    "grunt-contrib-less": "*",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-simple-mocha": "0.3.2",
+    "grunt-jsbeautifier": "0.1.6",
+    "mocha": "1.8.1",
+    "should": "1.2.2",
+    "express": "3.3.4",
+    "ejs": "*",
+    "less-middleware": "*"
+  },
+  "keywords": [
+    "CMS",
+    "CDS",
+    "Content Delivery System",
+    "Content Management System",
+    "Periodic Decoupled Framework",
+    "ui",
+    "ux",
+    "AmEx"
+  ]
+}

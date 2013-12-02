@@ -48,28 +48,26 @@ module.exports = function(grunt) {
       },
       all: [
         'Gruntfile.js',
-        'index.js',
+        'controller/**/*.js',
+        'test/**/*.js',
+        'config/**/*.js',
+        'app.js',
         'lib/**/*.js',
+        'public/scripts/**/*.js',
         'test/**/*.js'
       ]
     },
-    copy: {
-      main: {
-        files: [
-          {expand: true,cwd: 'dist', src: ['**'], dest: '../../periodic/app.web-app/'},//
-        ]
-      }
-    },
-    clean: ['../../periodic/app.web-app/'],
     watch: {
       scripts: {
         // files: '**/*.js',
         files: [
           'Gruntfile.js',
+          'controller/**/*.js',
           'test/**/*.js',
-          'lib/**/*.js',
-          'dist/public/scripts/src/*.js',
-          'dist/public/stylesheets/*.less'
+          'config/**/*.js',
+          'model/**/*.js',
+          'public/scripts/src/*.js',
+          'public/stylesheets/*.less'
         ],
         tasks: ['lint', 'less'],
         options: {
@@ -93,7 +91,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-simple-mocha');
   grunt.loadNpmTasks('grunt-jsbeautifier');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-less');
 
@@ -103,7 +100,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', 'simplemocha');
 
   grunt.event.on('watch', function(action, filepath, target) {
-    exec("browserify "+__dirname+"/dist/public/scripts/src/main.js -o "+__dirname+"/dist/public/scripts/example.js");
+    exec("browserify "+__dirname+"/public/scripts/src/main.js -o "+__dirname+"/public/scripts/example.js");
     grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
   });
 };
