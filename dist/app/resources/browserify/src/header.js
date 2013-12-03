@@ -1,6 +1,8 @@
 'use strict';
-var navigationHeader = require('periodic.component.navigation-header'),
-	fullWidthSlideshow = require('periodic.component.full-width-slideshow'),
-	listViewScroll = require('periodic.component.list-view-scroll');
+	var navigationHeader = require('periodic.component.navigation-header'),
+		navigationHeader1 ;
 
-	console.log("main.js 7");
+	window.onload = function(){
+		navigationHeader1 = new navigationHeader();
+		navigationHeader1.init();
+	};

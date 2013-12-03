@@ -25,9 +25,9 @@
     "connect-flash": "~0.1.1",
     "passport-local": "~0.1.6",
     "passport": "~0.1.17",
-    "periodic.component.navigation-header": "0.0.7",
-    "periodic.component.full-width-slideshow": "0.0.5",
-    "periodic.component.list-view-scroll": "0.0.4"
+    "periodic.component.navigation-header": "0.0.9",
+    "periodic.component.full-width-slideshow": "0.0.9",
+    "periodic.component.list-view-scroll": "0.0.9"
   },
   "devDependencies": {
     "grunt": "0.4.0",

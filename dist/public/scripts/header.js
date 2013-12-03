@@ -1,11 +1,13 @@
 ;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
-var navigationHeader = require('periodic.component.navigation-header'),
-	fullWidthSlideshow = require('periodic.component.full-width-slideshow'),
-	listViewScroll = require('periodic.component.list-view-scroll');
+	var navigationHeader = require('periodic.component.navigation-header'),
+		navigationHeader1 ;
 
-	console.log("main.js 7");
-},{"periodic.component.full-width-slideshow":5,"periodic.component.list-view-scroll":43,"periodic.component.navigation-header":57}],2:[function(require,module,exports){
+	window.onload = function(){
+		navigationHeader1 = new navigationHeader();
+		navigationHeader1.init();
+	};
+},{"periodic.component.navigation-header":5}],2:[function(require,module,exports){
 
 /*!
  * EJS
@@ -364,7 +366,7 @@ if (require.extensions) {
   });
 }
 
-},{"./filters":3,"./utils":4,"fs":93,"path":94}],3:[function(require,module,exports){
+},{"./filters":3,"./utils":4,"fs":41,"path":42}],3:[function(require,module,exports){
 /*!
  * EJS - Filters
  * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
@@ -595,2858 +597,6 @@ exports.escape = function(html){
 
 },{}],5:[function(require,module,exports){
 /*
- * component.full-width-slideshow
- * http://github.amexpub.com/modules/component.full-width-slideshow
- *
- * Copyright (c) 2013 AmexPub. All rights reserved.
- */
-
-module.exports = require('./lib/component.full-width-slideshow');
-
-},{"./lib/component.full-width-slideshow":6}],6:[function(require,module,exports){
-/*
- * component.full-width-slideshow
- * http://github.amexpub.com/modules
- *
- * Copyright (c) 2013 Amex Pub. All rights reserved.
- */
-
-'use strict';
-require('browsernizr/test/css/transitions');
-require('browsernizr/test/css/transforms');
-require('browsernizr/lib/prefixed');
-require('browsernizr/test/css/transforms3d');
-
-var Modernizr = require('browsernizr'),
-	classie = require('classie'),
-	extend = require('util-extend'),
-	ejs = require('ejs'),
-	events = require('events'),
-	util = require('util'),
-	Hammer = require('hammerjs');
-
-var getEventTarget = function(e) {
-    e = e || window.event;
-    return e.target || e.srcElement;
-};
-// window.Modernizr = Modernizr;
-var fullWidthSlideshow = function(config){
-	// console.log(config);
-
-	this.$el =document.getElementById( config.element ) ;
-	this._init( config.options );
-};
-
-util.inherits(fullWidthSlideshow,events.EventEmitter);
-
-fullWidthSlideshow.prototype.render = function(template,data,element){
-	var componentHTML = ejs.render(template,data);
-	document.getElementById(element).innerHTML = componentHTML;
-	this.emit("renderedComponent");
-};
-
-fullWidthSlideshow.prototype._init = function( options ) {
-	var defaults = {
-		// default transition speed (ms)
-		speed : 500,
-		// default transition easing
-		easing : 'ease'
-	};
-	// options = extend( defaults,options );
-	// options
-	options = options || {};
-	this.options = extend( defaults,options );
-	// cache some elements and initialize some variables
-	this._config();
-	// initialize/bind the events
-	this._initEvents();
-};
-
-fullWidthSlideshow.prototype._config = function() {
-	// the list of items
-	this.$list = this.$el.getElementsByTagName('ul')[0];
-	this.$items = this.$list.getElementsByTagName('li');
-	// total number of items
-	this.itemsCount = this.$items.length;
-	// support for CSS Transitions & transforms
-
-	this.support = Modernizr.csstransitions && Modernizr.csstransforms;
-	this.support3d = Modernizr.csstransforms3d;
-	// transition end event name and transform name
-	// transition end event name
-	var transEndEventNames = {
-			'WebkitTransition' : 'webkitTransitionEnd',
-			'MozTransition' : 'transitionend',
-			'OTransition' : 'oTransitionEnd',
-			'msTransition' : 'MSTransitionEnd',
-			'transition' : 'transitionend'
-		},
-		transformNames = {
-			'WebkitTransform' : '-webkit-transform',
-			'MozTransform' : '-moz-transform',
-			'OTransform' : '-o-transform',
-			'msTransform' : '-ms-transform',
-			'transform' : 'transform'
-		};
-
-	if( this.support ) {
-		this.transEndEventName = transEndEventNames[ Modernizr.prefixed( 'transition' ) ] + '.p_c_fws';
-		this.transformName = transformNames[ Modernizr.prefixed( 'transform' ) ];
-	}
-	// current and old item´s index
-	this.current = 0;
-	this.old = 0;
-	// check if the list is currently moving
-	this.isAnimating = false;
-	// the list (ul) will have a width of 100% x itemsCount
-	this.$list.style.width = 100 * this.itemsCount + '%';
-	// apply the transition
-	if( this.support ) {
-		this.$list.style.transition = this.transformName + ' ' + this.options.speed + 'ms ' + this.options.easing ;
-	}
-	// each item will have a width of 100 / itemsCount
-
-	for(var x in this.$items){
-		if(this.$items[x].style){
-			this.$items[x].style.width = 100 / this.itemsCount + '%';
-		}
-	}
-	// add navigation arrows and the navigation dots if there is more than 1 item
-	if( this.itemsCount > 1 ) {
-		// add navigation arrows (the previous arrow is not shown initially):
-		var nav = document.createElement('nav');
-		nav.innerHTML='<span class="p_c_fws-slideprev" style="display:none;">&lt;</span><span class="p_c_fws-slidenext">&gt;</span>';
-		this.$el.appendChild(nav);
-		this.$navPrev = this.$el.getElementsByClassName("p_c_fws-slideprev")[0];
-		this.$navNext = this.$el.getElementsByClassName("p_c_fws-slidenext")[0];
-
-		var dots = '';
-		for( var i = 0; i < this.itemsCount; ++i ) {
-			// current dot will have the class p_c_fws-cuurentdot
-			var dot = i === this.current ? '<span class="p_c_fws-cuurentdot" data-itr="'+i+'"></span>' : '<span data-itr="'+i+'"></span>';
-			dots += dot;
-		}
-		var navDots = document.createElement('div');
-		navDots.setAttribute("class", "p_c_fws-slidedots");
-		// console.log("navDots",navDots);
-		navDots.innerHTML =dots;
-		this.$el.appendChild(navDots);
-		this.$navDots = navDots.getElementsByTagName('span');
-	}
-};
-
-fullWidthSlideshow.prototype._initEvents = function() {
-	var self = this;
-	if(this.options){
-		var hammertime = new Hammer(this.$el,{
-	        drag_block_vertical: true,
-	        drag_block_horizontal: true
-	    });
-
-	    hammertime.on("swiperight", function(ev) {
-			this._navigate('previous');
-		}.bind(this));
-
-	    hammertime.on("swipeleft", function(ev) {
-			this._navigate('next');
-		}.bind(this));
-	}
-
-	if( this.itemsCount > 1 ) {
-		this.$navPrev.addEventListener('click',function(){
-				this._navigate('previous');
-			}.bind(this));
-		this.$navNext.addEventListener('click',function(){
-				this._navigate('next');
-			}.bind(this));
-
-		this.$navDotDom = this.$el.getElementsByClassName("p_c_fws-slidedots")[0];
-
-		this.$navDotDom.addEventListener('click',function(event){
-			var target = getEventTarget(event);
-			if(target.tagName==="SPAN"){
-				this._jump(target.getAttribute("data-itr"));
-			}
-		}.bind(this));
-	}
-};
-
-fullWidthSlideshow.prototype._navigate = function( direction ) {
-
-	// do nothing if the list is currently moving
-	if( this.isAnimating ) {
-		return false;
-	}
-
-	this.isAnimating = true;
-	// update old and current values
-	this.old = this.current;
-	if( direction === 'next' && this.current < this.itemsCount - 1 ) {
-		++this.current;
-	}
-	else if( direction === 'previous' && this.current > 0 ) {
-		--this.current;
-	}
-	this.emit("navigatedComponent",this.current);
-
-	// slide
-	this._slide();
-	// console.log("this._slide()",this._slide());
-
-};
-fullWidthSlideshow.prototype._slide = function() {
-
-	// check which navigation arrows should be shown
-	this._toggleNavControls();
-	// translate value
-	var translateVal = -1 * this.current * 100 / this.itemsCount;
-
-	if( this.support ) {
-		this.$list.style[this.transformName]= this.support3d ? 'translate3d(' + translateVal + '%,0,0)' : 'translate(' + translateVal + '%)';
-	}
-	else {
-		this.$list.style['margin-left']= -1 * this.current * 100 + '%';
-	}
-
-	var transitionendfn = function() {
-		this.isAnimating = false;
-	}.bind(this);
-
-	if( this.support ) {
-		this.$list.addEventListener(this.transEndEventName, transitionendfn());
-	}
-	else {
-		transitionendfn.call();
-	}
-
-};
-fullWidthSlideshow.prototype._toggleNavControls = function() {
-
-	// if the current item is the first one in the list, the left arrow is not shown
-	// if the current item is the last one in the list, the right arrow is not shown
-	switch( this.current ) {
-		case 0 : this.$navNext.style.display="block"; this.$navPrev.style.display="none"; break;
-		case this.itemsCount - 1 : this.$navNext.style.display="none"; this.$navPrev.style.display="block"; break;
-		default : this.$navNext.style.display="block"; this.$navPrev.style.display="block"; break;
-	}
-	// highlight navigation dot
-	classie.remove( this.$navDots[this.old], 'p_c_fws-cuurentdot' );
-	classie.add( this.$navDots[this.current], 'p_c_fws-cuurentdot' );
-
-	// this.$navDots[this.old].removeClass( 'p_c_fws-cuurentdot' ).end().eq( this.current ).addClass( 'p_c_fws-cuurentdot' );
-
-};
-fullWidthSlideshow.prototype._jump = function( position ) {
-
-	// do nothing if clicking on the current dot, or if the list is currently moving
-	if( position === this.current || this.isAnimating ) {
-		return false;
-	}
-	this.isAnimating = true;
-	// update old and current values
-	this.old = this.current;
-	this.current = position;
-	// slide
-	this._slide();
-
-};
-fullWidthSlideshow.prototype.destroy = function() {
-
-	if( this.itemsCount > 1 ) {
-		this.$navPrev.parent().remove();
-		this.$navDots.parent().remove();
-	}
-	this.$list.css( 'width', 'auto' );
-	if( this.support ) {
-		this.$list.css( 'transition', 'none' );
-	}
-	this.$items.css( 'width', 'auto' );
-
-};
-window.fullWidthSlideshow = fullWidthSlideshow;
-module.exports = fullWidthSlideshow;
-},{"browsernizr":7,"browsernizr/lib/prefixed":25,"browsernizr/test/css/transforms":36,"browsernizr/test/css/transforms3d":37,"browsernizr/test/css/transitions":38,"classie":39,"ejs":2,"events":92,"hammerjs":41,"util":95,"util-extend":42}],7:[function(require,module,exports){
-var Modernizr = require('./lib/Modernizr'),
-    ModernizrProto = require('./lib/ModernizrProto'),
-    classes = require('./lib/classes'),
-    testRunner = require('./lib/testRunner'),
-    setClasses = require('./lib/setClasses');
-
-// Run each test
-testRunner();
-
-// Remove the "no-js" class if it exists
-setClasses(classes);
-
-delete ModernizrProto.addTest;
-delete ModernizrProto.addAsyncTest;
-
-// Run the things that are supposed to run after the tests
-for (var i = 0; i < Modernizr._q.length; i++) {
-  Modernizr._q[i]();
-}
-
-module.exports = Modernizr;
-
-},{"./lib/Modernizr":8,"./lib/ModernizrProto":9,"./lib/classes":10,"./lib/setClasses":27,"./lib/testRunner":33}],8:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-
-
-  // Fake some of Object.create
-  // so we can force non test results
-  // to be non "own" properties.
-  var Modernizr = function(){};
-  Modernizr.prototype = ModernizrProto;
-
-  // Leak modernizr globally when you `require` it
-  // rather than force it here.
-  // Overwrite name so constructor name is nicer :D
-  Modernizr = new Modernizr();
-
-  
-
-module.exports = Modernizr;
-},{"./ModernizrProto":9}],9:[function(require,module,exports){
-var tests = require('./tests');
-
-
-  var ModernizrProto = {
-    // The current version, dummy
-    _version: 'v3.0.0pre',
-
-    // Any settings that don't work as separate modules
-    // can go in here as configuration.
-    _config: {
-      classPrefix : '',
-      enableClasses : true
-    },
-
-    // Queue of tests
-    _q: [],
-
-    // Stub these for people who are listening
-    on: function( test, cb ) {
-      // I don't really think people should do this, but we can
-      // safe guard it a bit.
-      // -- NOTE:: this gets WAY overridden in src/addTest for
-      // actual async tests. This is in case people listen to
-      // synchronous tests. I would leave it out, but the code
-      // to *disallow* sync tests in the real version of this
-      // function is actually larger than this.
-      setTimeout(function() {
-        cb(this[test]);
-      }, 0);
-    },
-
-    addTest: function( name, fn, options ) {
-      tests.push({name : name, fn : fn, options : options });
-    },
-
-    addAsyncTest: function (fn) {
-      tests.push({name : null, fn : fn});
-    }
-  };
-
-  
-
-module.exports = ModernizrProto;
-},{"./tests":35}],10:[function(require,module,exports){
-
-  var classes = [];
-  
-module.exports = classes;
-},{}],11:[function(require,module,exports){
-
-  /**
-   * contains returns a boolean for if substr is found within str.
-   */
-  function contains( str, substr ) {
-    return !!~('' + str).indexOf(substr);
-  }
-
-  
-module.exports = contains;
-},{}],12:[function(require,module,exports){
-
-  var createElement = function() {
-    return document.createElement.apply(document, arguments);
-  };
-  
-module.exports = createElement;
-},{}],13:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var omPrefixes = require('./omPrefixes');
-
-
-  var cssomPrefixes = omPrefixes.split(' ');
-  ModernizrProto._cssomPrefixes = cssomPrefixes;
-  
-
-module.exports = cssomPrefixes;
-},{"./ModernizrProto":9,"./omPrefixes":24}],14:[function(require,module,exports){
-
-  var docElement = document.documentElement;
-  
-module.exports = docElement;
-},{}],15:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var omPrefixes = require('./omPrefixes');
-
-
-  var domPrefixes = omPrefixes.toLowerCase().split(' ');
-  ModernizrProto._domPrefixes = domPrefixes;
-  
-
-module.exports = domPrefixes;
-},{"./ModernizrProto":9,"./omPrefixes":24}],16:[function(require,module,exports){
-
-    // Helper function for e.g. boxSizing -> box-sizing
-    function domToHyphenated( name ) {
-        return name.replace(/([A-Z])/g, function(str, m1) {
-            return '-' + m1.toLowerCase();
-        }).replace(/^ms-/, '-ms-');
-    }
-    
-module.exports = domToHyphenated;
-},{}],17:[function(require,module,exports){
-var slice = require('./slice');
-
-
-  // Adapted from ES5-shim https://github.com/kriskowal/es5-shim/blob/master/es5-shim.js
-  // es5.github.com/#x15.3.4.5
-
-  if (!Function.prototype.bind) {
-    Function.prototype.bind = function bind(that) {
-
-      var target = this;
-
-      if (typeof target != "function") {
-        throw new TypeError();
-      }
-
-      var args = slice.call(arguments, 1);
-      var bound = function() {
-
-        if (this instanceof bound) {
-
-          var F = function(){};
-          F.prototype = target.prototype;
-          var self = new F();
-
-          var result = target.apply(
-            self,
-            args.concat(slice.call(arguments))
-          );
-          if (Object(result) === result) {
-            return result;
-          }
-          return self;
-
-        } else {
-
-          return target.apply(
-            that,
-            args.concat(slice.call(arguments))
-          );
-
-        }
-
-      };
-
-      return bound;
-    };
-  }
-
-  
-
-module.exports = Function.prototype.bind;
-},{"./slice":28}],18:[function(require,module,exports){
-var createElement = require('./createElement');
-
-
-  function getBody() {
-    // After page load injecting a fake body doesn't work so check if body exists
-    var body = document.body;
-
-    if(!body) {
-      // Can't use the real body create a fake one.
-      body = createElement('body');
-      body.fake = true;
-    }
-
-    return body;
-  }
-
-  
-
-module.exports = getBody;
-},{"./createElement":12}],19:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var docElement = require('./docElement');
-var createElement = require('./createElement');
-var getBody = require('./getBody');
-
-
-  // Inject element with style element and some CSS rules
-  function injectElementWithStyles( rule, callback, nodes, testnames ) {
-    var mod = 'modernizr';
-    var style;
-    var ret;
-    var node;
-    var docOverflow;
-    var div = createElement('div');
-    var body = getBody();
-
-    if ( parseInt(nodes, 10) ) {
-      // In order not to give false positives we create a node for each test
-      // This also allows the method to scale for unspecified uses
-      while ( nodes-- ) {
-        node = createElement('div');
-        node.id = testnames ? testnames[nodes] : mod + (nodes + 1);
-        div.appendChild(node);
-      }
-    }
-
-    // <style> elements in IE6-9 are considered 'NoScope' elements and therefore will be removed
-    // when injected with innerHTML. To get around this you need to prepend the 'NoScope' element
-    // with a 'scoped' element, in our case the soft-hyphen entity as it won't mess with our measurements.
-    // msdn.microsoft.com/en-us/library/ms533897%28VS.85%29.aspx
-    // Documents served as xml will throw if using &shy; so use xml friendly encoded version. See issue #277
-    style = ['&#173;','<style id="s', mod, '">', rule, '</style>'].join('');
-    div.id = mod;
-    // IE6 will false positive on some tests due to the style element inside the test div somehow interfering offsetHeight, so insert it into body or fakebody.
-    // Opera will act all quirky when injecting elements in documentElement when page is served as xml, needs fakebody too. #270
-    (!body.fake ? div : body).innerHTML += style;
-    body.appendChild(div);
-    if ( body.fake ) {
-      //avoid crashing IE8, if background image is used
-      body.style.background = '';
-      //Safari 5.13/5.1.4 OSX stops loading if ::-webkit-scrollbar is used and scrollbars are visible
-      body.style.overflow = 'hidden';
-      docOverflow = docElement.style.overflow;
-      docElement.style.overflow = 'hidden';
-      docElement.appendChild(body);
-    }
-
-    ret = callback(div, rule);
-    // If this is done after page load we don't want to remove the body so check if body exists
-    if ( body.fake ) {
-      body.parentNode.removeChild(body);
-      docElement.style.overflow = docOverflow;
-      // Trigger layout so kinetic scrolling isn't disabled in iOS6+
-      docElement.offsetHeight;
-    } else {
-      div.parentNode.removeChild(div);
-    }
-
-    return !!ret;
-
-  }
-
-  
-
-module.exports = injectElementWithStyles;
-},{"./ModernizrProto":9,"./createElement":12,"./docElement":14,"./getBody":18}],20:[function(require,module,exports){
-
-  /**
-   * is returns a boolean for if typeof obj is exactly type.
-   */
-  function is( obj, type ) {
-    return typeof obj === type;
-  }
-  
-module.exports = is;
-},{}],21:[function(require,module,exports){
-var Modernizr = require('./Modernizr');
-var modElem = require('./modElem');
-
-
-  var mStyle = {
-    style : modElem.elem.style
-  };
-
-  // kill ref for gc, must happen before
-  // mod.elem is removed, so we unshift on to
-  // the front of the queue.
-  Modernizr._q.unshift(function() {
-    delete mStyle.style;
-  });
-
-  
-
-module.exports = mStyle;
-},{"./Modernizr":8,"./modElem":22}],22:[function(require,module,exports){
-var Modernizr = require('./Modernizr');
-var createElement = require('./createElement');
-
-
-  /**
-   * Create our "modernizr" element that we do most feature tests on.
-   */
-  var modElem = {
-    elem : createElement('modernizr')
-  };
-
-  // Clean up this element
-  Modernizr._q.push(function() {
-    delete modElem.elem;
-  });
-
-  
-
-module.exports = modElem;
-},{"./Modernizr":8,"./createElement":12}],23:[function(require,module,exports){
-var injectElementWithStyles = require('./injectElementWithStyles');
-var domToHyphenated = require('./domToHyphenated');
-
-
-    // Function to allow us to use native feature detection functionality if available.
-    // Accepts a list of property names and a single value
-    // Returns `undefined` if native detection not available
-    function nativeTestProps ( props, value ) {
-        var i = props.length;
-        // Start with the JS API: http://www.w3.org/TR/css3-conditional/#the-css-interface
-        if ('CSS' in window && 'supports' in window.CSS) {
-            // Try every prefixed variant of the property
-            while (i--) {
-                if (window.CSS.supports(domToHyphenated(props[i]), value)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        // Otherwise fall back to at-rule (for FF 17 and Opera 12.x)
-        else if ('CSSSupportsRule' in window) {
-            // Build a condition string for every prefixed variant
-            var conditionText = [];
-            while (i--) {
-                conditionText.push('(' + domToHyphenated(props[i]) + ':' + value + ')');
-            }
-            conditionText = conditionText.join(' or ');
-            return injectElementWithStyles('@supports (' + conditionText + ') { #modernizr { position: absolute; } }', function( node ) {
-                return (window.getComputedStyle ?
-                        getComputedStyle(node, null) :
-                        node.currentStyle)['position'] == 'absolute';
-            });
-        }
-        return undefined;
-    }
-    
-
-module.exports = nativeTestProps;
-},{"./domToHyphenated":16,"./injectElementWithStyles":19}],24:[function(require,module,exports){
-
-  // Following spec is to expose vendor-specific style properties as:
-  //   elem.style.WebkitBorderRadius
-  // and the following would be incorrect:
-  //   elem.style.webkitBorderRadius
-
-  // Webkit ghosts their properties in lowercase but Opera & Moz do not.
-  // Microsoft uses a lowercase `ms` instead of the correct `Ms` in IE8+
-  //   erik.eae.net/archives/2008/03/10/21.48.10/
-
-  // More here: github.com/Modernizr/Modernizr/issues/issue/21
-  var omPrefixes = 'Webkit Moz O ms';
-  
-module.exports = omPrefixes;
-},{}],25:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var testPropsAll = require('./testPropsAll');
-
-
-  // Modernizr.prefixed() returns the prefixed or nonprefixed property name variant of your input
-  // Modernizr.prefixed('boxSizing') // 'MozBoxSizing'
-
-  // Properties must be passed as dom-style camelcase, rather than `box-sizing` hypentated style.
-  // Return values will also be the camelCase variant, if you need to translate that to hypenated style use:
-  //
-  //     str.replace(/([A-Z])/g, function(str,m1){ return '-' + m1.toLowerCase(); }).replace(/^ms-/,'-ms-');
-
-  // If you're trying to ascertain which transition end event to bind to, you might do something like...
-  //
-  //     var transEndEventNames = {
-  //         'WebkitTransition' : 'webkitTransitionEnd',// Saf 6, Android Browser
-  //         'MozTransition'    : 'transitionend',      // only for FF < 15
-  //         'transition'       : 'transitionend'       // IE10, Opera, Chrome, FF 15+, Saf 7+
-  //     },
-  //     transEndEventName = transEndEventNames[ Modernizr.prefixed('transition') ];
-
-  var prefixed = ModernizrProto.prefixed = function( prop, obj, elem ) {
-    if (!obj) {
-      return testPropsAll(prop, 'pfx');
-    } else {
-      // Testing DOM property e.g. Modernizr.prefixed('requestAnimationFrame', window) // 'mozRequestAnimationFrame'
-      return testPropsAll(prop, obj, elem);
-    }
-  };
-
-  
-
-module.exports = prefixed;
-},{"./ModernizrProto":9,"./testPropsAll":32}],26:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-
-
-  // List of property values to set for css tests. See ticket #21
-  var prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
-
-  // expose these for the plugin API. Look in the source for how to join() them against your input
-  ModernizrProto._prefixes = prefixes;
-
-  
-
-module.exports = prefixes;
-},{"./ModernizrProto":9}],27:[function(require,module,exports){
-var Modernizr = require('./Modernizr');
-var docElement = require('./docElement');
-
-
-  // Pass in an and array of class names, e.g.:
-  //  ['no-webp', 'borderradius', ...]
-  function setClasses( classes ) {
-    var className = docElement.className;
-    var regex;
-    var classPrefix = Modernizr._config.classPrefix || '';
-
-    // Change `no-js` to `js` (we do this regardles of the `enableClasses`
-    // option)
-    // Handle classPrefix on this too
-    var reJS = new RegExp('(^|\\s)'+classPrefix+'no-js(\\s|$)');
-    className = className.replace(reJS, '$1'+classPrefix+'js$2');
-
-    if(Modernizr._config.enableClasses) {
-      // Add the new classes
-      className += ' ' + classPrefix + classes.join(' ' + classPrefix);
-      docElement.className = className;
-    }
-
-  }
-
-  
-
-module.exports = setClasses;
-},{"./Modernizr":8,"./docElement":14}],28:[function(require,module,exports){
-var classes = require('./classes');
-
-
-  var slice = classes.slice;
-  
-
-module.exports = slice;
-},{"./classes":10}],29:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var testPropsAll = require('./testPropsAll');
-
-
-  /**
-   * testAllProps determines whether a given CSS property, in some prefixed
-   * form, is supported by the browser. It can optionally be given a value; in
-   * which case testAllProps will only return true if the browser supports that
-   * value for the named property; this latter case will use native detection
-   * (via window.CSS.supports) if available. A boolean can be passed as a 3rd
-   * parameter to skip the value check when native detection isn't available,
-   * to improve performance when simply testing for support of a property.
-   *
-   * @param prop - String naming the property to test
-   * @param value - [optional] String of the value to test
-   * @param skipValueTest - [optional] Whether to skip testing that the value
-   *                        is supported when using non-native detection
-   *                        (default: false)
-   */
-    function testAllProps (prop, value, skipValueTest) {
-        return testPropsAll(prop, undefined, undefined, value, skipValueTest);
-    }
-    ModernizrProto.testAllProps = testAllProps;
-    
-
-module.exports = testAllProps;
-},{"./ModernizrProto":9,"./testPropsAll":32}],30:[function(require,module,exports){
-var is = require('./is');
-require('./fnBind');
-
-
-  /**
-   * testDOMProps is a generic DOM property test; if a browser supports
-   *   a certain property, it won't return undefined for it.
-   */
-  function testDOMProps( props, obj, elem ) {
-    var item;
-
-    for ( var i in props ) {
-      if ( props[i] in obj ) {
-
-        // return the property name as a string
-        if (elem === false) return props[i];
-
-        item = obj[props[i]];
-
-        // let's bind a function (and it has a bind method -- certain native objects that report that they are a
-        // function don't [such as webkitAudioContext])
-        if (is(item, 'function') && 'bind' in item){
-          // default to autobind unless override
-          return item.bind(elem || obj);
-        }
-
-        // return the unbound function or obj or value
-        return item;
-      }
-    }
-    return false;
-  }
-
-  
-
-module.exports = testDOMProps;
-},{"./fnBind":17,"./is":20}],31:[function(require,module,exports){
-var contains = require('./contains');
-var mStyle = require('./mStyle');
-var createElement = require('./createElement');
-var nativeTestProps = require('./nativeTestProps');
-var is = require('./is');
-
-
-  // testProps is a generic CSS / DOM property test.
-
-  // In testing support for a given CSS property, it's legit to test:
-  //    `elem.style[styleName] !== undefined`
-  // If the property is supported it will return an empty string,
-  // if unsupported it will return undefined.
-
-  // We'll take advantage of this quick test and skip setting a style
-  // on our modernizr element, but instead just testing undefined vs
-  // empty string.
-
-  // Because the testing of the CSS property names (with "-", as
-  // opposed to the camelCase DOM properties) is non-portable and
-  // non-standard but works in WebKit and IE (but not Gecko or Opera),
-  // we explicitly reject properties with dashes so that authors
-  // developing in WebKit or IE first don't end up with
-  // browser-specific content by accident.
-
-  function testProps( props, prefixed, value, skipValueTest ) {
-    skipValueTest = is(skipValueTest, 'undefined') ? false : skipValueTest;
-
-    // Try native detect first
-    if (!is(value, 'undefined')) {
-      var result = nativeTestProps(props, value);
-      if(!is(result, 'undefined')) {
-        return result;
-      }
-    }
-
-    // Otherwise do it properly
-    var afterInit, i, j, prop, before;
-
-    // If we don't have a style element, that means
-    // we're running async or after the core tests,
-    // so we'll need to create our own elements to use
-    if ( !mStyle.style ) {
-      afterInit = true;
-      mStyle.modElem = createElement('modernizr');
-      mStyle.style = mStyle.modElem.style;
-    }
-
-    // Delete the objects if we
-    // we created them.
-    function cleanElems() {
-      if (afterInit) {
-        delete mStyle.style;
-        delete mStyle.modElem;
-      }
-    }
-
-    for ( i in props ) {
-      prop = props[i];
-      before = mStyle.style[prop];
-
-      if ( !contains(prop, "-") && mStyle.style[prop] !== undefined ) {
-
-        // If value to test has been passed in, do a set-and-check test.
-        // 0 (integer) is a valid property value, so check that `value` isn't
-        // undefined, rather than just checking it's truthy.
-        if (!skipValueTest && !is(value, 'undefined')) {
-
-          // Needs a try catch block because of old IE. This is slow, but will
-          // be avoided in most cases because `skipValueTest` will be used.
-          try {
-            mStyle.style[prop] = value;
-          } catch (e) {}
-
-          // If the property value has changed, we assume the value used is
-          // supported. If `value` is empty string, it'll fail here (because
-          // it hasn't changed), which matches how browsers have implemented
-          // CSS.supports()
-          if (mStyle.style[prop] != before) {
-            cleanElems();
-            return prefixed == 'pfx' ? prop : true;
-          }
-        }
-        // Otherwise just return true, or the property name if this is a
-        // `prefixed()` call
-        else {
-          cleanElems();
-          return prefixed == 'pfx' ? prop : true;
-        }
-      }
-    }
-    cleanElems();
-    return false;
-  }
-
-  
-
-module.exports = testProps;
-},{"./contains":11,"./createElement":12,"./is":20,"./mStyle":21,"./nativeTestProps":23}],32:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var cssomPrefixes = require('./cssomPrefixes');
-var is = require('./is');
-var testProps = require('./testProps');
-var domPrefixes = require('./domPrefixes');
-var testDOMProps = require('./testDOMProps');
-var prefixes = require('./prefixes');
-
-
-    /**
-     * testPropsAll tests a list of DOM properties we want to check against.
-     *     We specify literally ALL possible (known and/or likely) properties on
-     *     the element including the non-vendor prefixed one, for forward-
-     *     compatibility.
-     */
-    function testPropsAll( prop, prefixed, elem, value, skipValueTest ) {
-
-        var ucProp = prop.charAt(0).toUpperCase() + prop.slice(1),
-            props = (prop + ' ' + cssomPrefixes.join(ucProp + ' ') + ucProp).split(' ');
-
-        // did they call .prefixed('boxSizing') or are we just testing a prop?
-        if(is(prefixed, "string") || is(prefixed, "undefined")) {
-            return testProps(props, prefixed, value, skipValueTest);
-
-            // otherwise, they called .prefixed('requestAnimationFrame', window[, elem])
-        } else {
-            props = (prop + ' ' + (domPrefixes).join(ucProp + ' ') + ucProp).split(' ');
-            return testDOMProps(props, prefixed, elem);
-        }
-    }
-
-    // Modernizr.testAllProps() investigates whether a given style property,
-    //     or any of its vendor-prefixed variants, is recognized
-    // Note that the property names must be provided in the camelCase variant.
-    // Modernizr.testAllProps('boxSizing')
-    ModernizrProto.testAllProps = testPropsAll;
-
-    
-
-module.exports = testPropsAll;
-},{"./ModernizrProto":9,"./cssomPrefixes":13,"./domPrefixes":15,"./is":20,"./prefixes":26,"./testDOMProps":30,"./testProps":31}],33:[function(require,module,exports){
-var tests = require('./tests');
-var Modernizr = require('./Modernizr');
-var classes = require('./classes');
-var is = require('./is');
-
-
-  // Run through all tests and detect their support in the current UA.
-  function testRunner() {
-    var featureNames;
-    var feature;
-    var aliasIdx;
-    var result;
-    var nameIdx;
-    var featureName;
-    var featureNameSplit;
-    var modernizrProp;
-    var mPropCount;
-
-    for ( var featureIdx in tests ) {
-      featureNames = [];
-      feature = tests[featureIdx];
-      // run the test, throw the return value into the Modernizr,
-      //   then based on that boolean, define an appropriate className
-      //   and push it into an array of classes we'll join later.
-      //
-      //   If there is no name, it's an 'async' test that is run,
-      //   but not directly added to the object. That should
-      //   be done with a post-run addTest call.
-      if ( feature.name ) {
-        featureNames.push(feature.name.toLowerCase());
-
-        if (feature.options && feature.options.aliases && feature.options.aliases.length) {
-          // Add all the aliases into the names list
-          for (aliasIdx = 0; aliasIdx < feature.options.aliases.length; aliasIdx++) {
-            featureNames.push(feature.options.aliases[aliasIdx].toLowerCase());
-          }
-        }
-      }
-
-      // Run the test, or use the raw value if it's not a function
-      result = is(feature.fn, 'function') ? feature.fn() : feature.fn;
-
-
-      // Set each of the names on the Modernizr object
-      for (nameIdx = 0; nameIdx < featureNames.length; nameIdx++) {
-        featureName = featureNames[nameIdx];
-        // Support dot properties as sub tests. We don't do checking to make sure
-        // that the implied parent tests have been added. You must call them in
-        // order (either in the test, or make the parent test a dependency).
-        //
-        // Cap it to TWO to make the logic simple and because who needs that kind of subtesting
-        // hashtag famous last words
-        featureNameSplit = featureName.split('.');
-
-        if (featureNameSplit.length === 1) {
-          Modernizr[featureNameSplit[0]] = result;
-        }
-        else if (featureNameSplit.length === 2) {
-          Modernizr[featureNameSplit[0]][featureNameSplit[1]] = result;
-        }
-
-        classes.push((result ? '' : 'no-') + featureNameSplit.join('-'));
-      }
-    }
-  }
-
-  
-
-module.exports = testRunner;
-},{"./Modernizr":8,"./classes":10,"./is":20,"./tests":35}],34:[function(require,module,exports){
-var ModernizrProto = require('./ModernizrProto');
-var injectElementWithStyles = require('./injectElementWithStyles');
-
-
-  var testStyles = ModernizrProto.testStyles = injectElementWithStyles;
-  
-
-module.exports = testStyles;
-},{"./ModernizrProto":9,"./injectElementWithStyles":19}],35:[function(require,module,exports){
-
-  var tests = [];
-  
-module.exports = tests;
-},{}],36:[function(require,module,exports){
-var Modernizr = require('./../../lib/Modernizr');
-var testAllProps = require('./../../lib/testAllProps');
-
-/*!
-{
-  "name": "CSS Transforms",
-  "property": "csstransforms",
-  "caniuse": "transforms2d",
-  "tags": ["css"]
-}
-!*/
-
-  Modernizr.addTest('csstransforms', testAllProps('transform', 'scale(1)', true));
-
-
-},{"./../../lib/Modernizr":8,"./../../lib/testAllProps":29}],37:[function(require,module,exports){
-var Modernizr = require('./../../lib/Modernizr');
-var testAllProps = require('./../../lib/testAllProps');
-var testStyles = require('./../../lib/testStyles');
-var docElement = require('./../../lib/docElement');
-
-/*!
-{
-  "name": "CSS Transforms 3D",
-  "property": "csstransforms3d",
-  "caniuse": "transforms3d",
-  "tags": ["css"],
-  "warnings": [
-    "Chrome may occassionally fail this test on some systems; more info: https://code.google.com/p/chromium/issues/detail?id=129004"
-  ]
-}
-!*/
-
-  Modernizr.addTest('csstransforms3d', function() {
-    var ret = !!testAllProps('perspective', '1px', true);
-
-    // Webkit's 3D transforms are passed off to the browser's own graphics renderer.
-    //   It works fine in Safari on Leopard and Snow Leopard, but not in Chrome in
-    //   some conditions. As a result, Webkit typically recognizes the syntax but
-    //   will sometimes throw a false positive, thus we must do a more thorough check:
-    if ( ret && 'webkitPerspective' in docElement.style ) {
-
-      // Webkit allows this media query to succeed only if the feature is enabled.
-      // `@media (transform-3d),(-webkit-transform-3d){ ... }`
-      // If loaded inside the body tag and the test element inherits any padding, margin or borders it will fail #740
-      testStyles('@media (transform-3d),(-webkit-transform-3d){#modernizr{left:9px;position:absolute;height:5px;margin:0;padding:0;border:0}}', function( node, rule ) {
-        ret = node.offsetLeft === 9 && node.offsetHeight === 5;
-      });
-    }
-
-    return ret;
-  });
-
-
-},{"./../../lib/Modernizr":8,"./../../lib/docElement":14,"./../../lib/testAllProps":29,"./../../lib/testStyles":34}],38:[function(require,module,exports){
-var Modernizr = require('./../../lib/Modernizr');
-var testAllProps = require('./../../lib/testAllProps');
-
-/*!
-{
-  "name": "CSS Transitions",
-  "property": "csstransitions",
-  "caniuse": "css-transitions",
-  "tags": ["css"]
-}
-!*/
-
-  Modernizr.addTest('csstransitions', testAllProps('transition', 'all', true));
-
-
-},{"./../../lib/Modernizr":8,"./../../lib/testAllProps":29}],39:[function(require,module,exports){
-/*
- * classie
- * http://github.amexpub.com/modules/classie
- *
- * Copyright (c) 2013 AmexPub. All rights reserved.
- */
-
-module.exports = require('./lib/classie');
-
-},{"./lib/classie":40}],40:[function(require,module,exports){
-/*!
- * classie - class helper functions
- * from bonzo https://github.com/ded/bonzo
- * 
- * classie.has( elem, 'my-class' ) -> true/false
- * classie.add( elem, 'my-new-class' )
- * classie.remove( elem, 'my-unwanted-class' )
- * classie.toggle( elem, 'my-class' )
- */
-
-/*jshint browser: true, strict: true, undef: true */
-/*global define: false */
-
-( function( window ) {
-
-'use strict';
-
-// class helper functions from bonzo https://github.com/ded/bonzo
-
-function classReg( className ) {
-  return new RegExp("(^|\\s+)" + className + "(\\s+|$)");
-}
-
-// classList support for class management
-// altho to be fair, the api sucks because it won't accept multiple classes at once
-var hasClass, addClass, removeClass;
-
-if ( 'classList' in document.documentElement ) {
-  hasClass = function( elem, c ) {
-    return elem.classList.contains( c );
-  };
-  addClass = function( elem, c ) {
-    elem.classList.add( c );
-  };
-  removeClass = function( elem, c ) {
-    elem.classList.remove( c );
-  };
-}
-else {
-  hasClass = function( elem, c ) {
-    return classReg( c ).test( elem.className );
-  };
-  addClass = function( elem, c ) {
-    if ( !hasClass( elem, c ) ) {
-      elem.className = elem.className + ' ' + c;
-    }
-  };
-  removeClass = function( elem, c ) {
-    elem.className = elem.className.replace( classReg( c ), ' ' );
-  };
-}
-
-function toggleClass( elem, c ) {
-  var fn = hasClass( elem, c ) ? removeClass : addClass;
-  fn( elem, c );
-}
-
-var classie = {
-  // full names
-  hasClass: hasClass,
-  addClass: addClass,
-  removeClass: removeClass,
-  toggleClass: toggleClass,
-  // short names
-  has: hasClass,
-  add: addClass,
-  remove: removeClass,
-  toggle: toggleClass
-};
-
-// transport
-
-if ( typeof module === "object" && module && typeof module.exports === "object" ) {
-  // commonjs / browserify
-  module.exports = classie;
-} else {
-  // AMD
-  define(classie);
-}
-
-// If there is a window object, that at least has a document property,
-// define classie
-if ( typeof window === "object" && typeof window.document === "object" ) {
-  window.classie = classie;
-}
-
-
-})( window );
-
-},{}],41:[function(require,module,exports){
-/*! Hammer.JS - v1.0.5 - 2013-04-07
- * http://eightmedia.github.com/hammer.js
- *
- * Copyright (c) 2013 Jorik Tangelder <j.tangelder@gmail.com>;
- * Licensed under the MIT license */
-
-(function(window, undefined) {
-    'use strict';
-
-/**
- * Hammer
- * use this to create instances
- * @param   {HTMLElement}   element
- * @param   {Object}        options
- * @returns {Hammer.Instance}
- * @constructor
- */
-var Hammer = function(element, options) {
-    return new Hammer.Instance(element, options || {});
-};
-
-// default settings
-Hammer.defaults = {
-    // add styles and attributes to the element to prevent the browser from doing
-    // its native behavior. this doesnt prevent the scrolling, but cancels
-    // the contextmenu, tap highlighting etc
-    // set to false to disable this
-    stop_browser_behavior: {
-		// this also triggers onselectstart=false for IE
-        userSelect: 'none',
-		// this makes the element blocking in IE10 >, you could experiment with the value
-		// see for more options this issue; https://github.com/EightMedia/hammer.js/issues/241
-        touchAction: 'none',
-		touchCallout: 'none',
-        contentZooming: 'none',
-        userDrag: 'none',
-        tapHighlightColor: 'rgba(0,0,0,0)'
-    }
-
-    // more settings are defined per gesture at gestures.js
-};
-
-// detect touchevents
-Hammer.HAS_POINTEREVENTS = navigator.pointerEnabled || navigator.msPointerEnabled;
-Hammer.HAS_TOUCHEVENTS = ('ontouchstart' in window);
-
-// dont use mouseevents on mobile devices
-Hammer.MOBILE_REGEX = /mobile|tablet|ip(ad|hone|od)|android/i;
-Hammer.NO_MOUSEEVENTS = Hammer.HAS_TOUCHEVENTS && navigator.userAgent.match(Hammer.MOBILE_REGEX);
-
-// eventtypes per touchevent (start, move, end)
-// are filled by Hammer.event.determineEventTypes on setup
-Hammer.EVENT_TYPES = {};
-
-// direction defines
-Hammer.DIRECTION_DOWN = 'down';
-Hammer.DIRECTION_LEFT = 'left';
-Hammer.DIRECTION_UP = 'up';
-Hammer.DIRECTION_RIGHT = 'right';
-
-// pointer type
-Hammer.POINTER_MOUSE = 'mouse';
-Hammer.POINTER_TOUCH = 'touch';
-Hammer.POINTER_PEN = 'pen';
-
-// touch event defines
-Hammer.EVENT_START = 'start';
-Hammer.EVENT_MOVE = 'move';
-Hammer.EVENT_END = 'end';
-
-// hammer document where the base events are added at
-Hammer.DOCUMENT = document;
-
-// plugins namespace
-Hammer.plugins = {};
-
-// if the window events are set...
-Hammer.READY = false;
-
-/**
- * setup events to detect gestures on the document
- */
-function setup() {
-    if(Hammer.READY) {
-        return;
-    }
-
-    // find what eventtypes we add listeners to
-    Hammer.event.determineEventTypes();
-
-    // Register all gestures inside Hammer.gestures
-    for(var name in Hammer.gestures) {
-        if(Hammer.gestures.hasOwnProperty(name)) {
-            Hammer.detection.register(Hammer.gestures[name]);
-        }
-    }
-
-    // Add touch events on the document
-    Hammer.event.onTouch(Hammer.DOCUMENT, Hammer.EVENT_MOVE, Hammer.detection.detect);
-    Hammer.event.onTouch(Hammer.DOCUMENT, Hammer.EVENT_END, Hammer.detection.detect);
-
-    // Hammer is ready...!
-    Hammer.READY = true;
-}
-
-/**
- * create new hammer instance
- * all methods should return the instance itself, so it is chainable.
- * @param   {HTMLElement}       element
- * @param   {Object}            [options={}]
- * @returns {Hammer.Instance}
- * @constructor
- */
-Hammer.Instance = function(element, options) {
-    var self = this;
-
-    // setup HammerJS window events and register all gestures
-    // this also sets up the default options
-    setup();
-
-    this.element = element;
-
-    // start/stop detection option
-    this.enabled = true;
-
-    // merge options
-    this.options = Hammer.utils.extend(
-        Hammer.utils.extend({}, Hammer.defaults),
-        options || {});
-
-    // add some css to the element to prevent the browser from doing its native behavoir
-    if(this.options.stop_browser_behavior) {
-        Hammer.utils.stopDefaultBrowserBehavior(this.element, this.options.stop_browser_behavior);
-    }
-
-    // start detection on touchstart
-    Hammer.event.onTouch(element, Hammer.EVENT_START, function(ev) {
-        if(self.enabled) {
-            Hammer.detection.startDetect(self, ev);
-        }
-    });
-
-    // return instance
-    return this;
-};
-
-
-Hammer.Instance.prototype = {
-    /**
-     * bind events to the instance
-     * @param   {String}      gesture
-     * @param   {Function}    handler
-     * @returns {Hammer.Instance}
-     */
-    on: function onEvent(gesture, handler){
-        var gestures = gesture.split(' ');
-        for(var t=0; t<gestures.length; t++) {
-            this.element.addEventListener(gestures[t], handler, false);
-        }
-        return this;
-    },
-
-
-    /**
-     * unbind events to the instance
-     * @param   {String}      gesture
-     * @param   {Function}    handler
-     * @returns {Hammer.Instance}
-     */
-    off: function offEvent(gesture, handler){
-        var gestures = gesture.split(' ');
-        for(var t=0; t<gestures.length; t++) {
-            this.element.removeEventListener(gestures[t], handler, false);
-        }
-        return this;
-    },
-
-
-    /**
-     * trigger gesture event
-     * @param   {String}      gesture
-     * @param   {Object}      eventData
-     * @returns {Hammer.Instance}
-     */
-    trigger: function triggerEvent(gesture, eventData){
-        // create DOM event
-        var event = Hammer.DOCUMENT.createEvent('Event');
-		event.initEvent(gesture, true, true);
-		event.gesture = eventData;
-
-        // trigger on the target if it is in the instance element,
-        // this is for event delegation tricks
-        var element = this.element;
-        if(Hammer.utils.hasParent(eventData.target, element)) {
-            element = eventData.target;
-        }
-
-        element.dispatchEvent(event);
-        return this;
-    },
-
-
-    /**
-     * enable of disable hammer.js detection
-     * @param   {Boolean}   state
-     * @returns {Hammer.Instance}
-     */
-    enable: function enable(state) {
-        this.enabled = state;
-        return this;
-    }
-};
-
-/**
- * this holds the last move event,
- * used to fix empty touchend issue
- * see the onTouch event for an explanation
- * @type {Object}
- */
-var last_move_event = null;
-
-
-/**
- * when the mouse is hold down, this is true
- * @type {Boolean}
- */
-var enable_detect = false;
-
-
-/**
- * when touch events have been fired, this is true
- * @type {Boolean}
- */
-var touch_triggered = false;
-
-
-Hammer.event = {
-    /**
-     * simple addEventListener
-     * @param   {HTMLElement}   element
-     * @param   {String}        type
-     * @param   {Function}      handler
-     */
-    bindDom: function(element, type, handler) {
-        var types = type.split(' ');
-        for(var t=0; t<types.length; t++) {
-            element.addEventListener(types[t], handler, false);
-        }
-    },
-
-
-    /**
-     * touch events with mouse fallback
-     * @param   {HTMLElement}   element
-     * @param   {String}        eventType        like Hammer.EVENT_MOVE
-     * @param   {Function}      handler
-     */
-    onTouch: function onTouch(element, eventType, handler) {
-		var self = this;
-
-        this.bindDom(element, Hammer.EVENT_TYPES[eventType], function bindDomOnTouch(ev) {
-            var sourceEventType = ev.type.toLowerCase();
-
-            // onmouseup, but when touchend has been fired we do nothing.
-            // this is for touchdevices which also fire a mouseup on touchend
-            if(sourceEventType.match(/mouse/) && touch_triggered) {
-                return;
-            }
-
-            // mousebutton must be down or a touch event
-            else if( sourceEventType.match(/touch/) ||   // touch events are always on screen
-                sourceEventType.match(/pointerdown/) || // pointerevents touch
-                (sourceEventType.match(/mouse/) && ev.which === 1)   // mouse is pressed
-            ){
-                enable_detect = true;
-            }
-
-            // we are in a touch event, set the touch triggered bool to true,
-            // this for the conflicts that may occur on ios and android
-            if(sourceEventType.match(/touch|pointer/)) {
-                touch_triggered = true;
-            }
-
-            // count the total touches on the screen
-            var count_touches = 0;
-
-            // when touch has been triggered in this detection session
-            // and we are now handling a mouse event, we stop that to prevent conflicts
-            if(enable_detect) {
-                // update pointerevent
-                if(Hammer.HAS_POINTEREVENTS && eventType != Hammer.EVENT_END) {
-                    count_touches = Hammer.PointerEvent.updatePointer(eventType, ev);
-                }
-                // touch
-                else if(sourceEventType.match(/touch/)) {
-                    count_touches = ev.touches.length;
-                }
-                // mouse
-                else if(!touch_triggered) {
-                    count_touches = sourceEventType.match(/up/) ? 0 : 1;
-                }
-
-                // if we are in a end event, but when we remove one touch and
-                // we still have enough, set eventType to move
-                if(count_touches > 0 && eventType == Hammer.EVENT_END) {
-                    eventType = Hammer.EVENT_MOVE;
-                }
-                // no touches, force the end event
-                else if(!count_touches) {
-                    eventType = Hammer.EVENT_END;
-                }
-
-                // because touchend has no touches, and we often want to use these in our gestures,
-                // we send the last move event as our eventData in touchend
-                if(!count_touches && last_move_event !== null) {
-                    ev = last_move_event;
-                }
-                // store the last move event
-                else {
-                    last_move_event = ev;
-                }
-
-                // trigger the handler
-                handler.call(Hammer.detection, self.collectEventData(element, eventType, ev));
-
-                // remove pointerevent from list
-                if(Hammer.HAS_POINTEREVENTS && eventType == Hammer.EVENT_END) {
-                    count_touches = Hammer.PointerEvent.updatePointer(eventType, ev);
-                }
-            }
-
-            //debug(sourceEventType +" "+ eventType);
-
-            // on the end we reset everything
-            if(!count_touches) {
-                last_move_event = null;
-                enable_detect = false;
-                touch_triggered = false;
-                Hammer.PointerEvent.reset();
-            }
-        });
-    },
-
-
-    /**
-     * we have different events for each device/browser
-     * determine what we need and set them in the Hammer.EVENT_TYPES constant
-     */
-    determineEventTypes: function determineEventTypes() {
-        // determine the eventtype we want to set
-        var types;
-
-        // pointerEvents magic
-        if(Hammer.HAS_POINTEREVENTS) {
-            types = Hammer.PointerEvent.getEvents();
-        }
-        // on Android, iOS, blackberry, windows mobile we dont want any mouseevents
-        else if(Hammer.NO_MOUSEEVENTS) {
-            types = [
-                'touchstart',
-                'touchmove',
-                'touchend touchcancel'];
-        }
-        // for non pointer events browsers and mixed browsers,
-        // like chrome on windows8 touch laptop
-        else {
-            types = [
-                'touchstart mousedown',
-                'touchmove mousemove',
-                'touchend touchcancel mouseup'];
-        }
-
-        Hammer.EVENT_TYPES[Hammer.EVENT_START]  = types[0];
-        Hammer.EVENT_TYPES[Hammer.EVENT_MOVE]   = types[1];
-        Hammer.EVENT_TYPES[Hammer.EVENT_END]    = types[2];
-    },
-
-
-    /**
-     * create touchlist depending on the event
-     * @param   {Object}    ev
-     * @param   {String}    eventType   used by the fakemultitouch plugin
-     */
-    getTouchList: function getTouchList(ev/*, eventType*/) {
-        // get the fake pointerEvent touchlist
-        if(Hammer.HAS_POINTEREVENTS) {
-            return Hammer.PointerEvent.getTouchList();
-        }
-        // get the touchlist
-        else if(ev.touches) {
-            return ev.touches;
-        }
-        // make fake touchlist from mouse position
-        else {
-            return [{
-                identifier: 1,
-                pageX: ev.pageX,
-                pageY: ev.pageY,
-                target: ev.target
-            }];
-        }
-    },
-
-
-    /**
-     * collect event data for Hammer js
-     * @param   {HTMLElement}   element
-     * @param   {String}        eventType        like Hammer.EVENT_MOVE
-     * @param   {Object}        eventData
-     */
-    collectEventData: function collectEventData(element, eventType, ev) {
-        var touches = this.getTouchList(ev, eventType);
-
-        // find out pointerType
-        var pointerType = Hammer.POINTER_TOUCH;
-        if(ev.type.match(/mouse/) || Hammer.PointerEvent.matchType(Hammer.POINTER_MOUSE, ev)) {
-            pointerType = Hammer.POINTER_MOUSE;
-        }
-
-        return {
-            center      : Hammer.utils.getCenter(touches),
-            timeStamp   : new Date().getTime(),
-            target      : ev.target,
-            touches     : touches,
-            eventType   : eventType,
-            pointerType : pointerType,
-            srcEvent    : ev,
-
-            /**
-             * prevent the browser default actions
-             * mostly used to disable scrolling of the browser
-             */
-            preventDefault: function() {
-                if(this.srcEvent.preventManipulation) {
-                    this.srcEvent.preventManipulation();
-                }
-
-                if(this.srcEvent.preventDefault) {
-                    this.srcEvent.preventDefault();
-                }
-            },
-
-            /**
-             * stop bubbling the event up to its parents
-             */
-            stopPropagation: function() {
-                this.srcEvent.stopPropagation();
-            },
-
-            /**
-             * immediately stop gesture detection
-             * might be useful after a swipe was detected
-             * @return {*}
-             */
-            stopDetect: function() {
-                return Hammer.detection.stopDetect();
-            }
-        };
-    }
-};
-
-Hammer.PointerEvent = {
-    /**
-     * holds all pointers
-     * @type {Object}
-     */
-    pointers: {},
-
-    /**
-     * get a list of pointers
-     * @returns {Array}     touchlist
-     */
-    getTouchList: function() {
-        var self = this;
-        var touchlist = [];
-
-        // we can use forEach since pointerEvents only is in IE10
-        Object.keys(self.pointers).sort().forEach(function(id) {
-            touchlist.push(self.pointers[id]);
-        });
-        return touchlist;
-    },
-
-    /**
-     * update the position of a pointer
-     * @param   {String}   type             Hammer.EVENT_END
-     * @param   {Object}   pointerEvent
-     */
-    updatePointer: function(type, pointerEvent) {
-        if(type == Hammer.EVENT_END) {
-            this.pointers = {};
-        }
-        else {
-            pointerEvent.identifier = pointerEvent.pointerId;
-            this.pointers[pointerEvent.pointerId] = pointerEvent;
-        }
-
-        return Object.keys(this.pointers).length;
-    },
-
-    /**
-     * check if ev matches pointertype
-     * @param   {String}        pointerType     Hammer.POINTER_MOUSE
-     * @param   {PointerEvent}  ev
-     */
-    matchType: function(pointerType, ev) {
-        if(!ev.pointerType) {
-            return false;
-        }
-
-        var types = {};
-        types[Hammer.POINTER_MOUSE] = (ev.pointerType == ev.MSPOINTER_TYPE_MOUSE || ev.pointerType == Hammer.POINTER_MOUSE);
-        types[Hammer.POINTER_TOUCH] = (ev.pointerType == ev.MSPOINTER_TYPE_TOUCH || ev.pointerType == Hammer.POINTER_TOUCH);
-        types[Hammer.POINTER_PEN] = (ev.pointerType == ev.MSPOINTER_TYPE_PEN || ev.pointerType == Hammer.POINTER_PEN);
-        return types[pointerType];
-    },
-
-
-    /**
-     * get events
-     */
-    getEvents: function() {
-        return [
-            'pointerdown MSPointerDown',
-            'pointermove MSPointerMove',
-            'pointerup pointercancel MSPointerUp MSPointerCancel'
-        ];
-    },
-
-    /**
-     * reset the list
-     */
-    reset: function() {
-        this.pointers = {};
-    }
-};
-
-
-Hammer.utils = {
-    /**
-     * extend method,
-     * also used for cloning when dest is an empty object
-     * @param   {Object}    dest
-     * @param   {Object}    src
-	 * @parm	{Boolean}	merge		do a merge
-     * @returns {Object}    dest
-     */
-    extend: function extend(dest, src, merge) {
-        for (var key in src) {
-			if(dest[key] !== undefined && merge) {
-				continue;
-			}
-            dest[key] = src[key];
-        }
-        return dest;
-    },
-
-
-    /**
-     * find if a node is in the given parent
-     * used for event delegation tricks
-     * @param   {HTMLElement}   node
-     * @param   {HTMLElement}   parent
-     * @returns {boolean}       has_parent
-     */
-    hasParent: function(node, parent) {
-        while(node){
-            if(node == parent) {
-                return true;
-            }
-            node = node.parentNode;
-        }
-        return false;
-    },
-
-
-    /**
-     * get the center of all the touches
-     * @param   {Array}     touches
-     * @returns {Object}    center
-     */
-    getCenter: function getCenter(touches) {
-        var valuesX = [], valuesY = [];
-
-        for(var t= 0,len=touches.length; t<len; t++) {
-            valuesX.push(touches[t].pageX);
-            valuesY.push(touches[t].pageY);
-        }
-
-        return {
-            pageX: ((Math.min.apply(Math, valuesX) + Math.max.apply(Math, valuesX)) / 2),
-            pageY: ((Math.min.apply(Math, valuesY) + Math.max.apply(Math, valuesY)) / 2)
-        };
-    },
-
-
-    /**
-     * calculate the velocity between two points
-     * @param   {Number}    delta_time
-     * @param   {Number}    delta_x
-     * @param   {Number}    delta_y
-     * @returns {Object}    velocity
-     */
-    getVelocity: function getVelocity(delta_time, delta_x, delta_y) {
-        return {
-            x: Math.abs(delta_x / delta_time) || 0,
-            y: Math.abs(delta_y / delta_time) || 0
-        };
-    },
-
-
-    /**
-     * calculate the angle between two coordinates
-     * @param   {Touch}     touch1
-     * @param   {Touch}     touch2
-     * @returns {Number}    angle
-     */
-    getAngle: function getAngle(touch1, touch2) {
-        var y = touch2.pageY - touch1.pageY,
-            x = touch2.pageX - touch1.pageX;
-        return Math.atan2(y, x) * 180 / Math.PI;
-    },
-
-
-    /**
-     * angle to direction define
-     * @param   {Touch}     touch1
-     * @param   {Touch}     touch2
-     * @returns {String}    direction constant, like Hammer.DIRECTION_LEFT
-     */
-    getDirection: function getDirection(touch1, touch2) {
-        var x = Math.abs(touch1.pageX - touch2.pageX),
-            y = Math.abs(touch1.pageY - touch2.pageY);
-
-        if(x >= y) {
-            return touch1.pageX - touch2.pageX > 0 ? Hammer.DIRECTION_LEFT : Hammer.DIRECTION_RIGHT;
-        }
-        else {
-            return touch1.pageY - touch2.pageY > 0 ? Hammer.DIRECTION_UP : Hammer.DIRECTION_DOWN;
-        }
-    },
-
-
-    /**
-     * calculate the distance between two touches
-     * @param   {Touch}     touch1
-     * @param   {Touch}     touch2
-     * @returns {Number}    distance
-     */
-    getDistance: function getDistance(touch1, touch2) {
-        var x = touch2.pageX - touch1.pageX,
-            y = touch2.pageY - touch1.pageY;
-        return Math.sqrt((x*x) + (y*y));
-    },
-
-
-    /**
-     * calculate the scale factor between two touchLists (fingers)
-     * no scale is 1, and goes down to 0 when pinched together, and bigger when pinched out
-     * @param   {Array}     start
-     * @param   {Array}     end
-     * @returns {Number}    scale
-     */
-    getScale: function getScale(start, end) {
-        // need two fingers...
-        if(start.length >= 2 && end.length >= 2) {
-            return this.getDistance(end[0], end[1]) /
-                this.getDistance(start[0], start[1]);
-        }
-        return 1;
-    },
-
-
-    /**
-     * calculate the rotation degrees between two touchLists (fingers)
-     * @param   {Array}     start
-     * @param   {Array}     end
-     * @returns {Number}    rotation
-     */
-    getRotation: function getRotation(start, end) {
-        // need two fingers
-        if(start.length >= 2 && end.length >= 2) {
-            return this.getAngle(end[1], end[0]) -
-                this.getAngle(start[1], start[0]);
-        }
-        return 0;
-    },
-
-
-    /**
-     * boolean if the direction is vertical
-     * @param    {String}    direction
-     * @returns  {Boolean}   is_vertical
-     */
-    isVertical: function isVertical(direction) {
-        return (direction == Hammer.DIRECTION_UP || direction == Hammer.DIRECTION_DOWN);
-    },
-
-
-    /**
-     * stop browser default behavior with css props
-     * @param   {HtmlElement}   element
-     * @param   {Object}        css_props
-     */
-    stopDefaultBrowserBehavior: function stopDefaultBrowserBehavior(element, css_props) {
-        var prop,
-            vendors = ['webkit','khtml','moz','ms','o',''];
-
-        if(!css_props || !element.style) {
-            return;
-        }
-
-        // with css properties for modern browsers
-        for(var i = 0; i < vendors.length; i++) {
-            for(var p in css_props) {
-                if(css_props.hasOwnProperty(p)) {
-                    prop = p;
-
-                    // vender prefix at the property
-                    if(vendors[i]) {
-                        prop = vendors[i] + prop.substring(0, 1).toUpperCase() + prop.substring(1);
-                    }
-
-                    // set the style
-                    element.style[prop] = css_props[p];
-                }
-            }
-        }
-
-        // also the disable onselectstart
-        if(css_props.userSelect == 'none') {
-            element.onselectstart = function() {
-                return false;
-            };
-        }
-    }
-};
-
-Hammer.detection = {
-    // contains all registred Hammer.gestures in the correct order
-    gestures: [],
-
-    // data of the current Hammer.gesture detection session
-    current: null,
-
-    // the previous Hammer.gesture session data
-    // is a full clone of the previous gesture.current object
-    previous: null,
-
-    // when this becomes true, no gestures are fired
-    stopped: false,
-
-
-    /**
-     * start Hammer.gesture detection
-     * @param   {Hammer.Instance}   inst
-     * @param   {Object}            eventData
-     */
-    startDetect: function startDetect(inst, eventData) {
-        // already busy with a Hammer.gesture detection on an element
-        if(this.current) {
-            return;
-        }
-
-        this.stopped = false;
-
-        this.current = {
-            inst        : inst, // reference to HammerInstance we're working for
-            startEvent  : Hammer.utils.extend({}, eventData), // start eventData for distances, timing etc
-            lastEvent   : false, // last eventData
-            name        : '' // current gesture we're in/detected, can be 'tap', 'hold' etc
-        };
-
-        this.detect(eventData);
-    },
-
-
-    /**
-     * Hammer.gesture detection
-     * @param   {Object}    eventData
-     * @param   {Object}    eventData
-     */
-    detect: function detect(eventData) {
-        if(!this.current || this.stopped) {
-            return;
-        }
-
-        // extend event data with calculations about scale, distance etc
-        eventData = this.extendEventData(eventData);
-
-        // instance options
-        var inst_options = this.current.inst.options;
-
-        // call Hammer.gesture handlers
-        for(var g=0,len=this.gestures.length; g<len; g++) {
-            var gesture = this.gestures[g];
-
-            // only when the instance options have enabled this gesture
-            if(!this.stopped && inst_options[gesture.name] !== false) {
-                // if a handler returns false, we stop with the detection
-                if(gesture.handler.call(gesture, eventData, this.current.inst) === false) {
-                    this.stopDetect();
-                    break;
-                }
-            }
-        }
-
-        // store as previous event event
-        if(this.current) {
-            this.current.lastEvent = eventData;
-        }
-
-        // endevent, but not the last touch, so dont stop
-        if(eventData.eventType == Hammer.EVENT_END && !eventData.touches.length-1) {
-            this.stopDetect();
-        }
-
-        return eventData;
-    },
-
-
-    /**
-     * clear the Hammer.gesture vars
-     * this is called on endDetect, but can also be used when a final Hammer.gesture has been detected
-     * to stop other Hammer.gestures from being fired
-     */
-    stopDetect: function stopDetect() {
-        // clone current data to the store as the previous gesture
-        // used for the double tap gesture, since this is an other gesture detect session
-        this.previous = Hammer.utils.extend({}, this.current);
-
-        // reset the current
-        this.current = null;
-
-        // stopped!
-        this.stopped = true;
-    },
-
-
-    /**
-     * extend eventData for Hammer.gestures
-     * @param   {Object}   ev
-     * @returns {Object}   ev
-     */
-    extendEventData: function extendEventData(ev) {
-        var startEv = this.current.startEvent;
-
-        // if the touches change, set the new touches over the startEvent touches
-        // this because touchevents don't have all the touches on touchstart, or the
-        // user must place his fingers at the EXACT same time on the screen, which is not realistic
-        // but, sometimes it happens that both fingers are touching at the EXACT same time
-        if(startEv && (ev.touches.length != startEv.touches.length || ev.touches === startEv.touches)) {
-            // extend 1 level deep to get the touchlist with the touch objects
-            startEv.touches = [];
-            for(var i=0,len=ev.touches.length; i<len; i++) {
-                startEv.touches.push(Hammer.utils.extend({}, ev.touches[i]));
-            }
-        }
-
-        var delta_time = ev.timeStamp - startEv.timeStamp,
-            delta_x = ev.center.pageX - startEv.center.pageX,
-            delta_y = ev.center.pageY - startEv.center.pageY,
-            velocity = Hammer.utils.getVelocity(delta_time, delta_x, delta_y);
-
-        Hammer.utils.extend(ev, {
-            deltaTime   : delta_time,
-
-            deltaX      : delta_x,
-            deltaY      : delta_y,
-
-            velocityX   : velocity.x,
-            velocityY   : velocity.y,
-
-            distance    : Hammer.utils.getDistance(startEv.center, ev.center),
-            angle       : Hammer.utils.getAngle(startEv.center, ev.center),
-            direction   : Hammer.utils.getDirection(startEv.center, ev.center),
-
-            scale       : Hammer.utils.getScale(startEv.touches, ev.touches),
-            rotation    : Hammer.utils.getRotation(startEv.touches, ev.touches),
-
-            startEvent  : startEv
-        });
-
-        return ev;
-    },
-
-
-    /**
-     * register new gesture
-     * @param   {Object}    gesture object, see gestures.js for documentation
-     * @returns {Array}     gestures
-     */
-    register: function register(gesture) {
-        // add an enable gesture options if there is no given
-        var options = gesture.defaults || {};
-        if(options[gesture.name] === undefined) {
-            options[gesture.name] = true;
-        }
-
-        // extend Hammer default options with the Hammer.gesture options
-        Hammer.utils.extend(Hammer.defaults, options, true);
-
-        // set its index
-        gesture.index = gesture.index || 1000;
-
-        // add Hammer.gesture to the list
-        this.gestures.push(gesture);
-
-        // sort the list by index
-        this.gestures.sort(function(a, b) {
-            if (a.index < b.index) {
-                return -1;
-            }
-            if (a.index > b.index) {
-                return 1;
-            }
-            return 0;
-        });
-
-        return this.gestures;
-    }
-};
-
-
-Hammer.gestures = Hammer.gestures || {};
-
-/**
- * Custom gestures
- * ==============================
- *
- * Gesture object
- * --------------------
- * The object structure of a gesture:
- *
- * { name: 'mygesture',
- *   index: 1337,
- *   defaults: {
- *     mygesture_option: true
- *   }
- *   handler: function(type, ev, inst) {
- *     // trigger gesture event
- *     inst.trigger(this.name, ev);
- *   }
- * }
-
- * @param   {String}    name
- * this should be the name of the gesture, lowercase
- * it is also being used to disable/enable the gesture per instance config.
- *
- * @param   {Number}    [index=1000]
- * the index of the gesture, where it is going to be in the stack of gestures detection
- * like when you build an gesture that depends on the drag gesture, it is a good
- * idea to place it after the index of the drag gesture.
- *
- * @param   {Object}    [defaults={}]
- * the default settings of the gesture. these are added to the instance settings,
- * and can be overruled per instance. you can also add the name of the gesture,
- * but this is also added by default (and set to true).
- *
- * @param   {Function}  handler
- * this handles the gesture detection of your custom gesture and receives the
- * following arguments:
- *
- *      @param  {Object}    eventData
- *      event data containing the following properties:
- *          timeStamp   {Number}        time the event occurred
- *          target      {HTMLElement}   target element
- *          touches     {Array}         touches (fingers, pointers, mouse) on the screen
- *          pointerType {String}        kind of pointer that was used. matches Hammer.POINTER_MOUSE|TOUCH
- *          center      {Object}        center position of the touches. contains pageX and pageY
- *          deltaTime   {Number}        the total time of the touches in the screen
- *          deltaX      {Number}        the delta on x axis we haved moved
- *          deltaY      {Number}        the delta on y axis we haved moved
- *          velocityX   {Number}        the velocity on the x
- *          velocityY   {Number}        the velocity on y
- *          angle       {Number}        the angle we are moving
- *          direction   {String}        the direction we are moving. matches Hammer.DIRECTION_UP|DOWN|LEFT|RIGHT
- *          distance    {Number}        the distance we haved moved
- *          scale       {Number}        scaling of the touches, needs 2 touches
- *          rotation    {Number}        rotation of the touches, needs 2 touches *
- *          eventType   {String}        matches Hammer.EVENT_START|MOVE|END
- *          srcEvent    {Object}        the source event, like TouchStart or MouseDown *
- *          startEvent  {Object}        contains the same properties as above,
- *                                      but from the first touch. this is used to calculate
- *                                      distances, deltaTime, scaling etc
- *
- *      @param  {Hammer.Instance}    inst
- *      the instance we are doing the detection for. you can get the options from
- *      the inst.options object and trigger the gesture event by calling inst.trigger
- *
- *
- * Handle gestures
- * --------------------
- * inside the handler you can get/set Hammer.detection.current. This is the current
- * detection session. It has the following properties
- *      @param  {String}    name
- *      contains the name of the gesture we have detected. it has not a real function,
- *      only to check in other gestures if something is detected.
- *      like in the drag gesture we set it to 'drag' and in the swipe gesture we can
- *      check if the current gesture is 'drag' by accessing Hammer.detection.current.name
- *
- *      @readonly
- *      @param  {Hammer.Instance}    inst
- *      the instance we do the detection for
- *
- *      @readonly
- *      @param  {Object}    startEvent
- *      contains the properties of the first gesture detection in this session.
- *      Used for calculations about timing, distance, etc.
- *
- *      @readonly
- *      @param  {Object}    lastEvent
- *      contains all the properties of the last gesture detect in this session.
- *
- * after the gesture detection session has been completed (user has released the screen)
- * the Hammer.detection.current object is copied into Hammer.detection.previous,
- * this is usefull for gestures like doubletap, where you need to know if the
- * previous gesture was a tap
- *
- * options that have been set by the instance can be received by calling inst.options
- *
- * You can trigger a gesture event by calling inst.trigger("mygesture", event).
- * The first param is the name of your gesture, the second the event argument
- *
- *
- * Register gestures
- * --------------------
- * When an gesture is added to the Hammer.gestures object, it is auto registered
- * at the setup of the first Hammer instance. You can also call Hammer.detection.register
- * manually and pass your gesture object as a param
- *
- */
-
-/**
- * Hold
- * Touch stays at the same place for x time
- * @events  hold
- */
-Hammer.gestures.Hold = {
-    name: 'hold',
-    index: 10,
-    defaults: {
-        hold_timeout	: 500,
-        hold_threshold	: 1
-    },
-    timer: null,
-    handler: function holdGesture(ev, inst) {
-        switch(ev.eventType) {
-            case Hammer.EVENT_START:
-                // clear any running timers
-                clearTimeout(this.timer);
-
-                // set the gesture so we can check in the timeout if it still is
-                Hammer.detection.current.name = this.name;
-
-                // set timer and if after the timeout it still is hold,
-                // we trigger the hold event
-                this.timer = setTimeout(function() {
-                    if(Hammer.detection.current.name == 'hold') {
-                        inst.trigger('hold', ev);
-                    }
-                }, inst.options.hold_timeout);
-                break;
-
-            // when you move or end we clear the timer
-            case Hammer.EVENT_MOVE:
-                if(ev.distance > inst.options.hold_threshold) {
-                    clearTimeout(this.timer);
-                }
-                break;
-
-            case Hammer.EVENT_END:
-                clearTimeout(this.timer);
-                break;
-        }
-    }
-};
-
-
-/**
- * Tap/DoubleTap
- * Quick touch at a place or double at the same place
- * @events  tap, doubletap
- */
-Hammer.gestures.Tap = {
-    name: 'tap',
-    index: 100,
-    defaults: {
-        tap_max_touchtime	: 250,
-        tap_max_distance	: 10,
-		tap_always			: true,
-        doubletap_distance	: 20,
-        doubletap_interval	: 300
-    },
-    handler: function tapGesture(ev, inst) {
-        if(ev.eventType == Hammer.EVENT_END) {
-            // previous gesture, for the double tap since these are two different gesture detections
-            var prev = Hammer.detection.previous,
-				did_doubletap = false;
-
-            // when the touchtime is higher then the max touch time
-            // or when the moving distance is too much
-            if(ev.deltaTime > inst.options.tap_max_touchtime ||
-                ev.distance > inst.options.tap_max_distance) {
-                return;
-            }
-
-            // check if double tap
-            if(prev && prev.name == 'tap' &&
-                (ev.timeStamp - prev.lastEvent.timeStamp) < inst.options.doubletap_interval &&
-                ev.distance < inst.options.doubletap_distance) {
-				inst.trigger('doubletap', ev);
-				did_doubletap = true;
-            }
-
-			// do a single tap
-			if(!did_doubletap || inst.options.tap_always) {
-				Hammer.detection.current.name = 'tap';
-				inst.trigger(Hammer.detection.current.name, ev);
-			}
-        }
-    }
-};
-
-
-/**
- * Swipe
- * triggers swipe events when the end velocity is above the threshold
- * @events  swipe, swipeleft, swiperight, swipeup, swipedown
- */
-Hammer.gestures.Swipe = {
-    name: 'swipe',
-    index: 40,
-    defaults: {
-        // set 0 for unlimited, but this can conflict with transform
-        swipe_max_touches  : 1,
-        swipe_velocity     : 0.7
-    },
-    handler: function swipeGesture(ev, inst) {
-        if(ev.eventType == Hammer.EVENT_END) {
-            // max touches
-            if(inst.options.swipe_max_touches > 0 &&
-                ev.touches.length > inst.options.swipe_max_touches) {
-                return;
-            }
-
-            // when the distance we moved is too small we skip this gesture
-            // or we can be already in dragging
-            if(ev.velocityX > inst.options.swipe_velocity ||
-                ev.velocityY > inst.options.swipe_velocity) {
-                // trigger swipe events
-                inst.trigger(this.name, ev);
-                inst.trigger(this.name + ev.direction, ev);
-            }
-        }
-    }
-};
-
-
-/**
- * Drag
- * Move with x fingers (default 1) around on the page. Blocking the scrolling when
- * moving left and right is a good practice. When all the drag events are blocking
- * you disable scrolling on that area.
- * @events  drag, drapleft, dragright, dragup, dragdown
- */
-Hammer.gestures.Drag = {
-    name: 'drag',
-    index: 50,
-    defaults: {
-        drag_min_distance : 10,
-        // set 0 for unlimited, but this can conflict with transform
-        drag_max_touches  : 1,
-        // prevent default browser behavior when dragging occurs
-        // be careful with it, it makes the element a blocking element
-        // when you are using the drag gesture, it is a good practice to set this true
-        drag_block_horizontal   : false,
-        drag_block_vertical     : false,
-        // drag_lock_to_axis keeps the drag gesture on the axis that it started on,
-        // It disallows vertical directions if the initial direction was horizontal, and vice versa.
-        drag_lock_to_axis       : false,
-        // drag lock only kicks in when distance > drag_lock_min_distance
-        // This way, locking occurs only when the distance has become large enough to reliably determine the direction
-        drag_lock_min_distance : 25
-    },
-    triggered: false,
-    handler: function dragGesture(ev, inst) {
-        // current gesture isnt drag, but dragged is true
-        // this means an other gesture is busy. now call dragend
-        if(Hammer.detection.current.name != this.name && this.triggered) {
-            inst.trigger(this.name +'end', ev);
-            this.triggered = false;
-            return;
-        }
-
-        // max touches
-        if(inst.options.drag_max_touches > 0 &&
-            ev.touches.length > inst.options.drag_max_touches) {
-            return;
-        }
-
-        switch(ev.eventType) {
-            case Hammer.EVENT_START:
-                this.triggered = false;
-                break;
-
-            case Hammer.EVENT_MOVE:
-                // when the distance we moved is too small we skip this gesture
-                // or we can be already in dragging
-                if(ev.distance < inst.options.drag_min_distance &&
-                    Hammer.detection.current.name != this.name) {
-                    return;
-                }
-
-                // we are dragging!
-                Hammer.detection.current.name = this.name;
-
-                // lock drag to axis?
-                if(Hammer.detection.current.lastEvent.drag_locked_to_axis || (inst.options.drag_lock_to_axis && inst.options.drag_lock_min_distance<=ev.distance)) {
-                    ev.drag_locked_to_axis = true;
-                }
-                var last_direction = Hammer.detection.current.lastEvent.direction;
-                if(ev.drag_locked_to_axis && last_direction !== ev.direction) {
-                    // keep direction on the axis that the drag gesture started on
-                    if(Hammer.utils.isVertical(last_direction)) {
-                        ev.direction = (ev.deltaY < 0) ? Hammer.DIRECTION_UP : Hammer.DIRECTION_DOWN;
-                    }
-                    else {
-                        ev.direction = (ev.deltaX < 0) ? Hammer.DIRECTION_LEFT : Hammer.DIRECTION_RIGHT;
-                    }
-                }
-
-                // first time, trigger dragstart event
-                if(!this.triggered) {
-                    inst.trigger(this.name +'start', ev);
-                    this.triggered = true;
-                }
-
-                // trigger normal event
-                inst.trigger(this.name, ev);
-
-                // direction event, like dragdown
-                inst.trigger(this.name + ev.direction, ev);
-
-                // block the browser events
-                if( (inst.options.drag_block_vertical && Hammer.utils.isVertical(ev.direction)) ||
-                    (inst.options.drag_block_horizontal && !Hammer.utils.isVertical(ev.direction))) {
-                    ev.preventDefault();
-                }
-                break;
-
-            case Hammer.EVENT_END:
-                // trigger dragend
-                if(this.triggered) {
-                    inst.trigger(this.name +'end', ev);
-                }
-
-                this.triggered = false;
-                break;
-        }
-    }
-};
-
-
-/**
- * Transform
- * User want to scale or rotate with 2 fingers
- * @events  transform, pinch, pinchin, pinchout, rotate
- */
-Hammer.gestures.Transform = {
-    name: 'transform',
-    index: 45,
-    defaults: {
-        // factor, no scale is 1, zoomin is to 0 and zoomout until higher then 1
-        transform_min_scale     : 0.01,
-        // rotation in degrees
-        transform_min_rotation  : 1,
-        // prevent default browser behavior when two touches are on the screen
-        // but it makes the element a blocking element
-        // when you are using the transform gesture, it is a good practice to set this true
-        transform_always_block  : false
-    },
-    triggered: false,
-    handler: function transformGesture(ev, inst) {
-        // current gesture isnt drag, but dragged is true
-        // this means an other gesture is busy. now call dragend
-        if(Hammer.detection.current.name != this.name && this.triggered) {
-            inst.trigger(this.name +'end', ev);
-            this.triggered = false;
-            return;
-        }
-
-        // atleast multitouch
-        if(ev.touches.length < 2) {
-            return;
-        }
-
-        // prevent default when two fingers are on the screen
-        if(inst.options.transform_always_block) {
-            ev.preventDefault();
-        }
-
-        switch(ev.eventType) {
-            case Hammer.EVENT_START:
-                this.triggered = false;
-                break;
-
-            case Hammer.EVENT_MOVE:
-                var scale_threshold = Math.abs(1-ev.scale);
-                var rotation_threshold = Math.abs(ev.rotation);
-
-                // when the distance we moved is too small we skip this gesture
-                // or we can be already in dragging
-                if(scale_threshold < inst.options.transform_min_scale &&
-                    rotation_threshold < inst.options.transform_min_rotation) {
-                    return;
-                }
-
-                // we are transforming!
-                Hammer.detection.current.name = this.name;
-
-                // first time, trigger dragstart event
-                if(!this.triggered) {
-                    inst.trigger(this.name +'start', ev);
-                    this.triggered = true;
-                }
-
-                inst.trigger(this.name, ev); // basic transform event
-
-                // trigger rotate event
-                if(rotation_threshold > inst.options.transform_min_rotation) {
-                    inst.trigger('rotate', ev);
-                }
-
-                // trigger pinch event
-                if(scale_threshold > inst.options.transform_min_scale) {
-                    inst.trigger('pinch', ev);
-                    inst.trigger('pinch'+ ((ev.scale < 1) ? 'in' : 'out'), ev);
-                }
-                break;
-
-            case Hammer.EVENT_END:
-                // trigger dragend
-                if(this.triggered) {
-                    inst.trigger(this.name +'end', ev);
-                }
-
-                this.triggered = false;
-                break;
-        }
-    }
-};
-
-
-/**
- * Touch
- * Called as first, tells the user has touched the screen
- * @events  touch
- */
-Hammer.gestures.Touch = {
-    name: 'touch',
-    index: -Infinity,
-    defaults: {
-        // call preventDefault at touchstart, and makes the element blocking by
-        // disabling the scrolling of the page, but it improves gestures like
-        // transforming and dragging.
-        // be careful with using this, it can be very annoying for users to be stuck
-        // on the page
-        prevent_default: false,
-
-        // disable mouse events, so only touch (or pen!) input triggers events
-        prevent_mouseevents: false
-    },
-    handler: function touchGesture(ev, inst) {
-        if(inst.options.prevent_mouseevents && ev.pointerType == Hammer.POINTER_MOUSE) {
-            ev.stopDetect();
-            return;
-        }
-
-        if(inst.options.prevent_default) {
-            ev.preventDefault();
-        }
-
-        if(ev.eventType ==  Hammer.EVENT_START) {
-            inst.trigger(this.name, ev);
-        }
-    }
-};
-
-
-/**
- * Release
- * Called as last, tells the user has released the screen
- * @events  release
- */
-Hammer.gestures.Release = {
-    name: 'release',
-    index: Infinity,
-    handler: function releaseGesture(ev, inst) {
-        if(ev.eventType ==  Hammer.EVENT_END) {
-            inst.trigger(this.name, ev);
-        }
-    }
-};
-
-// node export
-if(typeof module === 'object' && typeof module.exports === 'object'){
-    module.exports = Hammer;
-}
-// just window export
-else {
-    window.Hammer = Hammer;
-
-    // requireJS module definition
-    if(typeof window.define === 'function' && window.define.amd) {
-        window.define('hammer', [], function() {
-            return Hammer;
-        });
-    }
-}
-})(this);
-},{}],42:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-module.exports = extend;
-function extend(origin, add) {
-  // Don't do anything if add isn't an object
-  if (!add || typeof add !== 'object') return origin;
-
-  var keys = Object.keys(add);
-  var i = keys.length;
-  while (i--) {
-    origin[keys[i]] = add[keys[i]];
-  }
-  return origin;
-}
-
-},{}],43:[function(require,module,exports){
-/*
- * component.list-view-scroll
- * http://github.amexpub.com/modules/component.list-view-scroll
- *
- * Copyright (c) 2013 AmexPub. All rights reserved.
- */
-
-module.exports = require('./lib/component.list-view-scroll');
-
-},{"./lib/component.list-view-scroll":44}],44:[function(require,module,exports){
-
-/*
- * list-view-scroll
- * http://github.amexpub.com/modules
- *
- * Copyright (c) 2013 Amex Pub. All rights reserved.
- */
-
-/**
- * cbpScroller.js v1.0.0
- * http://www.codrops.com
- *
- * Licensed under the MIT license.
- * http://www.opensource.org/licenses/mit-license.php
- * 
- * Copyright 2013, Codrops
- * http://www.codrops.com
- */
-
-'use strict';
-
-var Modernizr = require('browsernizr'),
-	classie = require('classie'),
-	extend = require('util-extend'),
-	ejs = require('ejs'),
-	events = require('events'),
-	util = require('util');
-
-var listViewOnScroll = function(config){
-	var defaults,
-		options,
-		didScroll,
-		el,
-		sections,
-		self = this,
-		docElem = window.document.documentElement;
-		events.EventEmitter.call(this);
-	this.init = function(options) {
-		// console.log("beforee options",options);
-		options = options || {};
-		defaults = {
-			// The viewportFactor defines how much of the appearing item has to be visible in order to trigger the animation
-			// if we'd use a value of 0, this would mean that it would add the animation class as soon as the item is in the viewport. 
-			// If we were to use the value of 1, the animation would only be triggered when we see all of the item in the viewport (100% of it)
-			viewportFactor : 0.2,
-			idSelector: 'p_c_lvs-id',
-			sectionClass: '.p_c_lvs-section'
-		};
-		options = extend( defaults,options );
-		// console.log("options",options);
-		didScroll = false,
-		el = document.getElementById( options.idSelector ),
-		sections = Array.prototype.slice.call( el.querySelectorAll( options.sectionClass ) );
-
-		if( Modernizr.touch ) {return;}
-
-		// the sections already shown...
-		sections.forEach( function( el, i ) {
-			if( !_inViewport( el ) ) {
-				classie.add( el, 'p_c_lvs-init' );
-			}
-		} );
-
-		function scrollHandler() {
-			if( !didScroll ) {
-				didScroll = true;
-				setTimeout( function() { _scrollPage(options); }, 60 );
-			}
-		}
-
-		function resizeHandler(){
-			function delayed() {
-				_scrollPage(options);
-				resizeTimeout = null;
-			}
-
-			var resizeTimeout = setTimeout( delayed, 60 );
-
-			if ( resizeTimeout ) {
-				clearTimeout( resizeTimeout );
-			}
-		}
-
-		window.addEventListener( 'scroll', scrollHandler.bind(this), false );
-		window.addEventListener( 'resize', resizeHandler.bind(this), false );
-
-	};
-
-	function _getViewportH() {
-		var client = docElem.clientHeight,
-			inner = window.innerHeight;
-		if( client < inner ){
-			return inner;
-		}
-		else{
-			return client;
-		}
-	}
-
-	function _scrollY() {
-		return window.pageYOffset || docElem.scrollTop;
-	}
-
-	// http://stackoverflow.com/a/5598797/989439
-	function _getOffset( el ) {
-		var offsetTop = 0, offsetLeft = 0;
-		do {
-			if ( !isNaN( el.offsetTop ) ) {
-				offsetTop += el.offsetTop+el.offsetParent.offsetTop;
-			}
-			if ( !isNaN( el.offsetLeft ) ) {
-				offsetLeft += el.offsetLeft+el.offsetParent.offsetLeft;
-			}
-		} while( el === el.offsetParent ); //changed for linting
-
-		return {
-			top : offsetTop,
-			left : offsetLeft
-		};
-	}
-
-	function _inViewport( el, h ) {
-		var elH = el.offsetHeight,
-			scrolled = _scrollY(),
-			viewed = scrolled + _getViewportH(),
-			elTop = _getOffset(el).top,
-			elBottom = elTop + elH;
-
-			// if 0, the element is considered in the viewport as soon as it enters.
-			// if 1, the element is considered in the viewport only when it's fully inside
-			// value in percentage (1 >= h >= 0)
-			h = h || 0;
-
-		return (elTop + elH * h) <= viewed && (elBottom) >= scrolled;
-	}
-	function _scrollPage(options) {
-		sections.forEach( function( el, i ) {
-
-			if( _inViewport( el, options.viewportFactor ) ) {
-				classie.add( el, 'p_c_lvs-animate' );
-				// self.emit("sectionInView",i);
-			}
-			else {
-				// this add class init if it doesn't have it. This will ensure that the items initially in the viewport will also animate on scroll
-				classie.add( el, 'p_c_lvs-init' );
-				classie.remove( el, 'p_c_lvs-animate' );
-			}
-		});
-		didScroll = false;
-	}
-};
-
-util.inherits(listViewOnScroll,events.EventEmitter);
-
-listViewOnScroll.prototype.render = function(template,data,element){
-	var componentHTML = ejs.render(template,data);
-	document.getElementById(element).innerHTML = componentHTML;
-	this.emit("renderedComponent");
-};
-
-module.exports = listViewOnScroll;
-},{"browsernizr":45,"classie":54,"ejs":2,"events":92,"util":95,"util-extend":56}],45:[function(require,module,exports){
-arguments[4][7][0].apply(exports,arguments)
-},{"./lib/Modernizr":46,"./lib/ModernizrProto":47,"./lib/classes":48,"./lib/setClasses":51,"./lib/testRunner":52}],46:[function(require,module,exports){
-arguments[4][8][0].apply(exports,arguments)
-},{"./ModernizrProto":47}],47:[function(require,module,exports){
-module.exports=require(9)
-},{"./tests":53}],48:[function(require,module,exports){
-module.exports=require(10)
-},{}],49:[function(require,module,exports){
-module.exports=require(14)
-},{}],50:[function(require,module,exports){
-module.exports=require(20)
-},{}],51:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"./Modernizr":46,"./docElement":49}],52:[function(require,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"./Modernizr":46,"./classes":48,"./is":50,"./tests":53}],53:[function(require,module,exports){
-module.exports=require(35)
-},{}],54:[function(require,module,exports){
-module.exports=require(39)
-},{"./lib/classie":55}],55:[function(require,module,exports){
-module.exports=require(40)
-},{}],56:[function(require,module,exports){
-module.exports=require(42)
-},{}],57:[function(require,module,exports){
-/*
  * component.navigation-header
  * http://github.amexpub.com/modules/component.navigation-header
  *
@@ -3455,7 +605,7 @@ module.exports=require(42)
 
 module.exports = require('./lib/component.navigation-header');
 
-},{"./lib/component.navigation-header":58}],58:[function(require,module,exports){
+},{"./lib/component.navigation-header":6}],6:[function(require,module,exports){
 /*
  * component.navigation-header
  * http://github.amexpub.com/modules
@@ -3585,13 +735,92 @@ navigationHeader.prototype._hideSubNav = function() {
 };
 window.navigationHeader = navigationHeader;
 module.exports = navigationHeader;
-},{"browsernizr":59,"browsernizr/lib/addTest":62,"browsernizr/lib/prefixed":79,"classie":88,"ejs":2,"events":92,"util":95,"util-extend":90}],59:[function(require,module,exports){
-arguments[4][7][0].apply(exports,arguments)
-},{"./lib/Modernizr":60,"./lib/ModernizrProto":61,"./lib/classes":63,"./lib/setClasses":81,"./lib/testRunner":86}],60:[function(require,module,exports){
-arguments[4][8][0].apply(exports,arguments)
-},{"./ModernizrProto":61}],61:[function(require,module,exports){
-module.exports=require(9)
-},{"./tests":87}],62:[function(require,module,exports){
+},{"browsernizr":7,"browsernizr/lib/addTest":10,"browsernizr/lib/prefixed":27,"classie":36,"ejs":2,"events":40,"util":43,"util-extend":38}],7:[function(require,module,exports){
+var Modernizr = require('./lib/Modernizr'),
+    ModernizrProto = require('./lib/ModernizrProto'),
+    classes = require('./lib/classes'),
+    testRunner = require('./lib/testRunner'),
+    setClasses = require('./lib/setClasses');
+
+// Run each test
+testRunner();
+
+// Remove the "no-js" class if it exists
+setClasses(classes);
+
+delete ModernizrProto.addTest;
+delete ModernizrProto.addAsyncTest;
+
+// Run the things that are supposed to run after the tests
+for (var i = 0; i < Modernizr._q.length; i++) {
+  Modernizr._q[i]();
+}
+
+module.exports = Modernizr;
+
+},{"./lib/Modernizr":8,"./lib/ModernizrProto":9,"./lib/classes":11,"./lib/setClasses":29,"./lib/testRunner":34}],8:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+
+
+  // Fake some of Object.create
+  // so we can force non test results
+  // to be non "own" properties.
+  var Modernizr = function(){};
+  Modernizr.prototype = ModernizrProto;
+
+  // Leak modernizr globally when you `require` it
+  // rather than force it here.
+  // Overwrite name so constructor name is nicer :D
+  Modernizr = new Modernizr();
+
+  
+
+module.exports = Modernizr;
+},{"./ModernizrProto":9}],9:[function(require,module,exports){
+var tests = require('./tests');
+
+
+  var ModernizrProto = {
+    // The current version, dummy
+    _version: 'v3.0.0pre',
+
+    // Any settings that don't work as separate modules
+    // can go in here as configuration.
+    _config: {
+      classPrefix : '',
+      enableClasses : true
+    },
+
+    // Queue of tests
+    _q: [],
+
+    // Stub these for people who are listening
+    on: function( test, cb ) {
+      // I don't really think people should do this, but we can
+      // safe guard it a bit.
+      // -- NOTE:: this gets WAY overridden in src/addTest for
+      // actual async tests. This is in case people listen to
+      // synchronous tests. I would leave it out, but the code
+      // to *disallow* sync tests in the real version of this
+      // function is actually larger than this.
+      setTimeout(function() {
+        cb(this[test]);
+      }, 0);
+    },
+
+    addTest: function( name, fn, options ) {
+      tests.push({name : name, fn : fn, options : options });
+    },
+
+    addAsyncTest: function (fn) {
+      tests.push({name : null, fn : fn});
+    }
+  };
+
+  
+
+module.exports = ModernizrProto;
+},{"./tests":35}],10:[function(require,module,exports){
 var ModernizrProto = require('./ModernizrProto');
 var Modernizr = require('./Modernizr');
 var hasOwnProp = require('./hasOwnProp');
@@ -3709,25 +938,137 @@ var setClasses = require('./setClasses');
   
 
 module.exports = addTest;
-},{"./Modernizr":60,"./ModernizrProto":61,"./hasOwnProp":72,"./setClasses":81}],63:[function(require,module,exports){
-module.exports=require(10)
-},{}],64:[function(require,module,exports){
-module.exports=require(11)
-},{}],65:[function(require,module,exports){
-module.exports=require(12)
-},{}],66:[function(require,module,exports){
-arguments[4][13][0].apply(exports,arguments)
-},{"./ModernizrProto":61,"./omPrefixes":78}],67:[function(require,module,exports){
-module.exports=require(14)
-},{}],68:[function(require,module,exports){
-arguments[4][15][0].apply(exports,arguments)
-},{"./ModernizrProto":61,"./omPrefixes":78}],69:[function(require,module,exports){
-module.exports=require(16)
-},{}],70:[function(require,module,exports){
-arguments[4][17][0].apply(exports,arguments)
-},{"./slice":82}],71:[function(require,module,exports){
-module.exports=require(18)
-},{"./createElement":65}],72:[function(require,module,exports){
+},{"./Modernizr":8,"./ModernizrProto":9,"./hasOwnProp":20,"./setClasses":29}],11:[function(require,module,exports){
+
+  var classes = [];
+  
+module.exports = classes;
+},{}],12:[function(require,module,exports){
+
+  /**
+   * contains returns a boolean for if substr is found within str.
+   */
+  function contains( str, substr ) {
+    return !!~('' + str).indexOf(substr);
+  }
+
+  
+module.exports = contains;
+},{}],13:[function(require,module,exports){
+
+  var createElement = function() {
+    return document.createElement.apply(document, arguments);
+  };
+  
+module.exports = createElement;
+},{}],14:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+var omPrefixes = require('./omPrefixes');
+
+
+  var cssomPrefixes = omPrefixes.split(' ');
+  ModernizrProto._cssomPrefixes = cssomPrefixes;
+  
+
+module.exports = cssomPrefixes;
+},{"./ModernizrProto":9,"./omPrefixes":26}],15:[function(require,module,exports){
+
+  var docElement = document.documentElement;
+  
+module.exports = docElement;
+},{}],16:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+var omPrefixes = require('./omPrefixes');
+
+
+  var domPrefixes = omPrefixes.toLowerCase().split(' ');
+  ModernizrProto._domPrefixes = domPrefixes;
+  
+
+module.exports = domPrefixes;
+},{"./ModernizrProto":9,"./omPrefixes":26}],17:[function(require,module,exports){
+
+    // Helper function for e.g. boxSizing -> box-sizing
+    function domToHyphenated( name ) {
+        return name.replace(/([A-Z])/g, function(str, m1) {
+            return '-' + m1.toLowerCase();
+        }).replace(/^ms-/, '-ms-');
+    }
+    
+module.exports = domToHyphenated;
+},{}],18:[function(require,module,exports){
+var slice = require('./slice');
+
+
+  // Adapted from ES5-shim https://github.com/kriskowal/es5-shim/blob/master/es5-shim.js
+  // es5.github.com/#x15.3.4.5
+
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function bind(that) {
+
+      var target = this;
+
+      if (typeof target != "function") {
+        throw new TypeError();
+      }
+
+      var args = slice.call(arguments, 1);
+      var bound = function() {
+
+        if (this instanceof bound) {
+
+          var F = function(){};
+          F.prototype = target.prototype;
+          var self = new F();
+
+          var result = target.apply(
+            self,
+            args.concat(slice.call(arguments))
+          );
+          if (Object(result) === result) {
+            return result;
+          }
+          return self;
+
+        } else {
+
+          return target.apply(
+            that,
+            args.concat(slice.call(arguments))
+          );
+
+        }
+
+      };
+
+      return bound;
+    };
+  }
+
+  
+
+module.exports = Function.prototype.bind;
+},{"./slice":30}],19:[function(require,module,exports){
+var createElement = require('./createElement');
+
+
+  function getBody() {
+    // After page load injecting a fake body doesn't work so check if body exists
+    var body = document.body;
+
+    if(!body) {
+      // Can't use the real body create a fake one.
+      body = createElement('body');
+      body.fake = true;
+    }
+
+    return body;
+  }
+
+  
+
+module.exports = getBody;
+},{"./createElement":13}],20:[function(require,module,exports){
 var is = require('./is');
 
 
@@ -3751,43 +1092,647 @@ var is = require('./is');
   
 
 module.exports = hasOwnProp;
-},{"./is":74}],73:[function(require,module,exports){
-arguments[4][19][0].apply(exports,arguments)
-},{"./ModernizrProto":61,"./createElement":65,"./docElement":67,"./getBody":71}],74:[function(require,module,exports){
-module.exports=require(20)
-},{}],75:[function(require,module,exports){
-arguments[4][21][0].apply(exports,arguments)
-},{"./Modernizr":60,"./modElem":76}],76:[function(require,module,exports){
-arguments[4][22][0].apply(exports,arguments)
-},{"./Modernizr":60,"./createElement":65}],77:[function(require,module,exports){
-arguments[4][23][0].apply(exports,arguments)
-},{"./domToHyphenated":69,"./injectElementWithStyles":73}],78:[function(require,module,exports){
-module.exports=require(24)
-},{}],79:[function(require,module,exports){
-arguments[4][25][0].apply(exports,arguments)
-},{"./ModernizrProto":61,"./testPropsAll":85}],80:[function(require,module,exports){
-arguments[4][26][0].apply(exports,arguments)
-},{"./ModernizrProto":61}],81:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"./Modernizr":60,"./docElement":67}],82:[function(require,module,exports){
-module.exports=require(28)
-},{"./classes":63}],83:[function(require,module,exports){
-arguments[4][30][0].apply(exports,arguments)
-},{"./fnBind":70,"./is":74}],84:[function(require,module,exports){
-arguments[4][31][0].apply(exports,arguments)
-},{"./contains":64,"./createElement":65,"./is":74,"./mStyle":75,"./nativeTestProps":77}],85:[function(require,module,exports){
-arguments[4][32][0].apply(exports,arguments)
-},{"./ModernizrProto":61,"./cssomPrefixes":66,"./domPrefixes":68,"./is":74,"./prefixes":80,"./testDOMProps":83,"./testProps":84}],86:[function(require,module,exports){
-arguments[4][33][0].apply(exports,arguments)
-},{"./Modernizr":60,"./classes":63,"./is":74,"./tests":87}],87:[function(require,module,exports){
-module.exports=require(35)
-},{}],88:[function(require,module,exports){
-module.exports=require(39)
-},{"./lib/classie":89}],89:[function(require,module,exports){
-module.exports=require(40)
-},{}],90:[function(require,module,exports){
-module.exports=require(42)
-},{}],91:[function(require,module,exports){
+},{"./is":22}],21:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+var docElement = require('./docElement');
+var createElement = require('./createElement');
+var getBody = require('./getBody');
+
+
+  // Inject element with style element and some CSS rules
+  function injectElementWithStyles( rule, callback, nodes, testnames ) {
+    var mod = 'modernizr';
+    var style;
+    var ret;
+    var node;
+    var docOverflow;
+    var div = createElement('div');
+    var body = getBody();
+
+    if ( parseInt(nodes, 10) ) {
+      // In order not to give false positives we create a node for each test
+      // This also allows the method to scale for unspecified uses
+      while ( nodes-- ) {
+        node = createElement('div');
+        node.id = testnames ? testnames[nodes] : mod + (nodes + 1);
+        div.appendChild(node);
+      }
+    }
+
+    // <style> elements in IE6-9 are considered 'NoScope' elements and therefore will be removed
+    // when injected with innerHTML. To get around this you need to prepend the 'NoScope' element
+    // with a 'scoped' element, in our case the soft-hyphen entity as it won't mess with our measurements.
+    // msdn.microsoft.com/en-us/library/ms533897%28VS.85%29.aspx
+    // Documents served as xml will throw if using &shy; so use xml friendly encoded version. See issue #277
+    style = ['&#173;','<style id="s', mod, '">', rule, '</style>'].join('');
+    div.id = mod;
+    // IE6 will false positive on some tests due to the style element inside the test div somehow interfering offsetHeight, so insert it into body or fakebody.
+    // Opera will act all quirky when injecting elements in documentElement when page is served as xml, needs fakebody too. #270
+    (!body.fake ? div : body).innerHTML += style;
+    body.appendChild(div);
+    if ( body.fake ) {
+      //avoid crashing IE8, if background image is used
+      body.style.background = '';
+      //Safari 5.13/5.1.4 OSX stops loading if ::-webkit-scrollbar is used and scrollbars are visible
+      body.style.overflow = 'hidden';
+      docOverflow = docElement.style.overflow;
+      docElement.style.overflow = 'hidden';
+      docElement.appendChild(body);
+    }
+
+    ret = callback(div, rule);
+    // If this is done after page load we don't want to remove the body so check if body exists
+    if ( body.fake ) {
+      body.parentNode.removeChild(body);
+      docElement.style.overflow = docOverflow;
+      // Trigger layout so kinetic scrolling isn't disabled in iOS6+
+      docElement.offsetHeight;
+    } else {
+      div.parentNode.removeChild(div);
+    }
+
+    return !!ret;
+
+  }
+
+  
+
+module.exports = injectElementWithStyles;
+},{"./ModernizrProto":9,"./createElement":13,"./docElement":15,"./getBody":19}],22:[function(require,module,exports){
+
+  /**
+   * is returns a boolean for if typeof obj is exactly type.
+   */
+  function is( obj, type ) {
+    return typeof obj === type;
+  }
+  
+module.exports = is;
+},{}],23:[function(require,module,exports){
+var Modernizr = require('./Modernizr');
+var modElem = require('./modElem');
+
+
+  var mStyle = {
+    style : modElem.elem.style
+  };
+
+  // kill ref for gc, must happen before
+  // mod.elem is removed, so we unshift on to
+  // the front of the queue.
+  Modernizr._q.unshift(function() {
+    delete mStyle.style;
+  });
+
+  
+
+module.exports = mStyle;
+},{"./Modernizr":8,"./modElem":24}],24:[function(require,module,exports){
+var Modernizr = require('./Modernizr');
+var createElement = require('./createElement');
+
+
+  /**
+   * Create our "modernizr" element that we do most feature tests on.
+   */
+  var modElem = {
+    elem : createElement('modernizr')
+  };
+
+  // Clean up this element
+  Modernizr._q.push(function() {
+    delete modElem.elem;
+  });
+
+  
+
+module.exports = modElem;
+},{"./Modernizr":8,"./createElement":13}],25:[function(require,module,exports){
+var injectElementWithStyles = require('./injectElementWithStyles');
+var domToHyphenated = require('./domToHyphenated');
+
+
+    // Function to allow us to use native feature detection functionality if available.
+    // Accepts a list of property names and a single value
+    // Returns `undefined` if native detection not available
+    function nativeTestProps ( props, value ) {
+        var i = props.length;
+        // Start with the JS API: http://www.w3.org/TR/css3-conditional/#the-css-interface
+        if ('CSS' in window && 'supports' in window.CSS) {
+            // Try every prefixed variant of the property
+            while (i--) {
+                if (window.CSS.supports(domToHyphenated(props[i]), value)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        // Otherwise fall back to at-rule (for FF 17 and Opera 12.x)
+        else if ('CSSSupportsRule' in window) {
+            // Build a condition string for every prefixed variant
+            var conditionText = [];
+            while (i--) {
+                conditionText.push('(' + domToHyphenated(props[i]) + ':' + value + ')');
+            }
+            conditionText = conditionText.join(' or ');
+            return injectElementWithStyles('@supports (' + conditionText + ') { #modernizr { position: absolute; } }', function( node ) {
+                return (window.getComputedStyle ?
+                        getComputedStyle(node, null) :
+                        node.currentStyle)['position'] == 'absolute';
+            });
+        }
+        return undefined;
+    }
+    
+
+module.exports = nativeTestProps;
+},{"./domToHyphenated":17,"./injectElementWithStyles":21}],26:[function(require,module,exports){
+
+  // Following spec is to expose vendor-specific style properties as:
+  //   elem.style.WebkitBorderRadius
+  // and the following would be incorrect:
+  //   elem.style.webkitBorderRadius
+
+  // Webkit ghosts their properties in lowercase but Opera & Moz do not.
+  // Microsoft uses a lowercase `ms` instead of the correct `Ms` in IE8+
+  //   erik.eae.net/archives/2008/03/10/21.48.10/
+
+  // More here: github.com/Modernizr/Modernizr/issues/issue/21
+  var omPrefixes = 'Webkit Moz O ms';
+  
+module.exports = omPrefixes;
+},{}],27:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+var testPropsAll = require('./testPropsAll');
+
+
+  // Modernizr.prefixed() returns the prefixed or nonprefixed property name variant of your input
+  // Modernizr.prefixed('boxSizing') // 'MozBoxSizing'
+
+  // Properties must be passed as dom-style camelcase, rather than `box-sizing` hypentated style.
+  // Return values will also be the camelCase variant, if you need to translate that to hypenated style use:
+  //
+  //     str.replace(/([A-Z])/g, function(str,m1){ return '-' + m1.toLowerCase(); }).replace(/^ms-/,'-ms-');
+
+  // If you're trying to ascertain which transition end event to bind to, you might do something like...
+  //
+  //     var transEndEventNames = {
+  //         'WebkitTransition' : 'webkitTransitionEnd',// Saf 6, Android Browser
+  //         'MozTransition'    : 'transitionend',      // only for FF < 15
+  //         'transition'       : 'transitionend'       // IE10, Opera, Chrome, FF 15+, Saf 7+
+  //     },
+  //     transEndEventName = transEndEventNames[ Modernizr.prefixed('transition') ];
+
+  var prefixed = ModernizrProto.prefixed = function( prop, obj, elem ) {
+    if (!obj) {
+      return testPropsAll(prop, 'pfx');
+    } else {
+      // Testing DOM property e.g. Modernizr.prefixed('requestAnimationFrame', window) // 'mozRequestAnimationFrame'
+      return testPropsAll(prop, obj, elem);
+    }
+  };
+
+  
+
+module.exports = prefixed;
+},{"./ModernizrProto":9,"./testPropsAll":33}],28:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+
+
+  // List of property values to set for css tests. See ticket #21
+  var prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
+
+  // expose these for the plugin API. Look in the source for how to join() them against your input
+  ModernizrProto._prefixes = prefixes;
+
+  
+
+module.exports = prefixes;
+},{"./ModernizrProto":9}],29:[function(require,module,exports){
+var Modernizr = require('./Modernizr');
+var docElement = require('./docElement');
+
+
+  // Pass in an and array of class names, e.g.:
+  //  ['no-webp', 'borderradius', ...]
+  function setClasses( classes ) {
+    var className = docElement.className;
+    var regex;
+    var classPrefix = Modernizr._config.classPrefix || '';
+
+    // Change `no-js` to `js` (we do this regardles of the `enableClasses`
+    // option)
+    // Handle classPrefix on this too
+    var reJS = new RegExp('(^|\\s)'+classPrefix+'no-js(\\s|$)');
+    className = className.replace(reJS, '$1'+classPrefix+'js$2');
+
+    if(Modernizr._config.enableClasses) {
+      // Add the new classes
+      className += ' ' + classPrefix + classes.join(' ' + classPrefix);
+      docElement.className = className;
+    }
+
+  }
+
+  
+
+module.exports = setClasses;
+},{"./Modernizr":8,"./docElement":15}],30:[function(require,module,exports){
+var classes = require('./classes');
+
+
+  var slice = classes.slice;
+  
+
+module.exports = slice;
+},{"./classes":11}],31:[function(require,module,exports){
+var is = require('./is');
+require('./fnBind');
+
+
+  /**
+   * testDOMProps is a generic DOM property test; if a browser supports
+   *   a certain property, it won't return undefined for it.
+   */
+  function testDOMProps( props, obj, elem ) {
+    var item;
+
+    for ( var i in props ) {
+      if ( props[i] in obj ) {
+
+        // return the property name as a string
+        if (elem === false) return props[i];
+
+        item = obj[props[i]];
+
+        // let's bind a function (and it has a bind method -- certain native objects that report that they are a
+        // function don't [such as webkitAudioContext])
+        if (is(item, 'function') && 'bind' in item){
+          // default to autobind unless override
+          return item.bind(elem || obj);
+        }
+
+        // return the unbound function or obj or value
+        return item;
+      }
+    }
+    return false;
+  }
+
+  
+
+module.exports = testDOMProps;
+},{"./fnBind":18,"./is":22}],32:[function(require,module,exports){
+var contains = require('./contains');
+var mStyle = require('./mStyle');
+var createElement = require('./createElement');
+var nativeTestProps = require('./nativeTestProps');
+var is = require('./is');
+
+
+  // testProps is a generic CSS / DOM property test.
+
+  // In testing support for a given CSS property, it's legit to test:
+  //    `elem.style[styleName] !== undefined`
+  // If the property is supported it will return an empty string,
+  // if unsupported it will return undefined.
+
+  // We'll take advantage of this quick test and skip setting a style
+  // on our modernizr element, but instead just testing undefined vs
+  // empty string.
+
+  // Because the testing of the CSS property names (with "-", as
+  // opposed to the camelCase DOM properties) is non-portable and
+  // non-standard but works in WebKit and IE (but not Gecko or Opera),
+  // we explicitly reject properties with dashes so that authors
+  // developing in WebKit or IE first don't end up with
+  // browser-specific content by accident.
+
+  function testProps( props, prefixed, value, skipValueTest ) {
+    skipValueTest = is(skipValueTest, 'undefined') ? false : skipValueTest;
+
+    // Try native detect first
+    if (!is(value, 'undefined')) {
+      var result = nativeTestProps(props, value);
+      if(!is(result, 'undefined')) {
+        return result;
+      }
+    }
+
+    // Otherwise do it properly
+    var afterInit, i, j, prop, before;
+
+    // If we don't have a style element, that means
+    // we're running async or after the core tests,
+    // so we'll need to create our own elements to use
+    if ( !mStyle.style ) {
+      afterInit = true;
+      mStyle.modElem = createElement('modernizr');
+      mStyle.style = mStyle.modElem.style;
+    }
+
+    // Delete the objects if we
+    // we created them.
+    function cleanElems() {
+      if (afterInit) {
+        delete mStyle.style;
+        delete mStyle.modElem;
+      }
+    }
+
+    for ( i in props ) {
+      prop = props[i];
+      before = mStyle.style[prop];
+
+      if ( !contains(prop, "-") && mStyle.style[prop] !== undefined ) {
+
+        // If value to test has been passed in, do a set-and-check test.
+        // 0 (integer) is a valid property value, so check that `value` isn't
+        // undefined, rather than just checking it's truthy.
+        if (!skipValueTest && !is(value, 'undefined')) {
+
+          // Needs a try catch block because of old IE. This is slow, but will
+          // be avoided in most cases because `skipValueTest` will be used.
+          try {
+            mStyle.style[prop] = value;
+          } catch (e) {}
+
+          // If the property value has changed, we assume the value used is
+          // supported. If `value` is empty string, it'll fail here (because
+          // it hasn't changed), which matches how browsers have implemented
+          // CSS.supports()
+          if (mStyle.style[prop] != before) {
+            cleanElems();
+            return prefixed == 'pfx' ? prop : true;
+          }
+        }
+        // Otherwise just return true, or the property name if this is a
+        // `prefixed()` call
+        else {
+          cleanElems();
+          return prefixed == 'pfx' ? prop : true;
+        }
+      }
+    }
+    cleanElems();
+    return false;
+  }
+
+  
+
+module.exports = testProps;
+},{"./contains":12,"./createElement":13,"./is":22,"./mStyle":23,"./nativeTestProps":25}],33:[function(require,module,exports){
+var ModernizrProto = require('./ModernizrProto');
+var cssomPrefixes = require('./cssomPrefixes');
+var is = require('./is');
+var testProps = require('./testProps');
+var domPrefixes = require('./domPrefixes');
+var testDOMProps = require('./testDOMProps');
+var prefixes = require('./prefixes');
+
+
+    /**
+     * testPropsAll tests a list of DOM properties we want to check against.
+     *     We specify literally ALL possible (known and/or likely) properties on
+     *     the element including the non-vendor prefixed one, for forward-
+     *     compatibility.
+     */
+    function testPropsAll( prop, prefixed, elem, value, skipValueTest ) {
+
+        var ucProp = prop.charAt(0).toUpperCase() + prop.slice(1),
+            props = (prop + ' ' + cssomPrefixes.join(ucProp + ' ') + ucProp).split(' ');
+
+        // did they call .prefixed('boxSizing') or are we just testing a prop?
+        if(is(prefixed, "string") || is(prefixed, "undefined")) {
+            return testProps(props, prefixed, value, skipValueTest);
+
+            // otherwise, they called .prefixed('requestAnimationFrame', window[, elem])
+        } else {
+            props = (prop + ' ' + (domPrefixes).join(ucProp + ' ') + ucProp).split(' ');
+            return testDOMProps(props, prefixed, elem);
+        }
+    }
+
+    // Modernizr.testAllProps() investigates whether a given style property,
+    //     or any of its vendor-prefixed variants, is recognized
+    // Note that the property names must be provided in the camelCase variant.
+    // Modernizr.testAllProps('boxSizing')
+    ModernizrProto.testAllProps = testPropsAll;
+
+    
+
+module.exports = testPropsAll;
+},{"./ModernizrProto":9,"./cssomPrefixes":14,"./domPrefixes":16,"./is":22,"./prefixes":28,"./testDOMProps":31,"./testProps":32}],34:[function(require,module,exports){
+var tests = require('./tests');
+var Modernizr = require('./Modernizr');
+var classes = require('./classes');
+var is = require('./is');
+
+
+  // Run through all tests and detect their support in the current UA.
+  function testRunner() {
+    var featureNames;
+    var feature;
+    var aliasIdx;
+    var result;
+    var nameIdx;
+    var featureName;
+    var featureNameSplit;
+    var modernizrProp;
+    var mPropCount;
+
+    for ( var featureIdx in tests ) {
+      featureNames = [];
+      feature = tests[featureIdx];
+      // run the test, throw the return value into the Modernizr,
+      //   then based on that boolean, define an appropriate className
+      //   and push it into an array of classes we'll join later.
+      //
+      //   If there is no name, it's an 'async' test that is run,
+      //   but not directly added to the object. That should
+      //   be done with a post-run addTest call.
+      if ( feature.name ) {
+        featureNames.push(feature.name.toLowerCase());
+
+        if (feature.options && feature.options.aliases && feature.options.aliases.length) {
+          // Add all the aliases into the names list
+          for (aliasIdx = 0; aliasIdx < feature.options.aliases.length; aliasIdx++) {
+            featureNames.push(feature.options.aliases[aliasIdx].toLowerCase());
+          }
+        }
+      }
+
+      // Run the test, or use the raw value if it's not a function
+      result = is(feature.fn, 'function') ? feature.fn() : feature.fn;
+
+
+      // Set each of the names on the Modernizr object
+      for (nameIdx = 0; nameIdx < featureNames.length; nameIdx++) {
+        featureName = featureNames[nameIdx];
+        // Support dot properties as sub tests. We don't do checking to make sure
+        // that the implied parent tests have been added. You must call them in
+        // order (either in the test, or make the parent test a dependency).
+        //
+        // Cap it to TWO to make the logic simple and because who needs that kind of subtesting
+        // hashtag famous last words
+        featureNameSplit = featureName.split('.');
+
+        if (featureNameSplit.length === 1) {
+          Modernizr[featureNameSplit[0]] = result;
+        }
+        else if (featureNameSplit.length === 2) {
+          Modernizr[featureNameSplit[0]][featureNameSplit[1]] = result;
+        }
+
+        classes.push((result ? '' : 'no-') + featureNameSplit.join('-'));
+      }
+    }
+  }
+
+  
+
+module.exports = testRunner;
+},{"./Modernizr":8,"./classes":11,"./is":22,"./tests":35}],35:[function(require,module,exports){
+
+  var tests = [];
+  
+module.exports = tests;
+},{}],36:[function(require,module,exports){
+/*
+ * classie
+ * http://github.amexpub.com/modules/classie
+ *
+ * Copyright (c) 2013 AmexPub. All rights reserved.
+ */
+
+module.exports = require('./lib/classie');
+
+},{"./lib/classie":37}],37:[function(require,module,exports){
+/*!
+ * classie - class helper functions
+ * from bonzo https://github.com/ded/bonzo
+ * 
+ * classie.has( elem, 'my-class' ) -> true/false
+ * classie.add( elem, 'my-new-class' )
+ * classie.remove( elem, 'my-unwanted-class' )
+ * classie.toggle( elem, 'my-class' )
+ */
+
+/*jshint browser: true, strict: true, undef: true */
+/*global define: false */
+
+( function( window ) {
+
+'use strict';
+
+// class helper functions from bonzo https://github.com/ded/bonzo
+
+function classReg( className ) {
+  return new RegExp("(^|\\s+)" + className + "(\\s+|$)");
+}
+
+// classList support for class management
+// altho to be fair, the api sucks because it won't accept multiple classes at once
+var hasClass, addClass, removeClass;
+
+if ( 'classList' in document.documentElement ) {
+  hasClass = function( elem, c ) {
+    return elem.classList.contains( c );
+  };
+  addClass = function( elem, c ) {
+    elem.classList.add( c );
+  };
+  removeClass = function( elem, c ) {
+    elem.classList.remove( c );
+  };
+}
+else {
+  hasClass = function( elem, c ) {
+    return classReg( c ).test( elem.className );
+  };
+  addClass = function( elem, c ) {
+    if ( !hasClass( elem, c ) ) {
+      elem.className = elem.className + ' ' + c;
+    }
+  };
+  removeClass = function( elem, c ) {
+    elem.className = elem.className.replace( classReg( c ), ' ' );
+  };
+}
+
+function toggleClass( elem, c ) {
+  var fn = hasClass( elem, c ) ? removeClass : addClass;
+  fn( elem, c );
+}
+
+var classie = {
+  // full names
+  hasClass: hasClass,
+  addClass: addClass,
+  removeClass: removeClass,
+  toggleClass: toggleClass,
+  // short names
+  has: hasClass,
+  add: addClass,
+  remove: removeClass,
+  toggle: toggleClass
+};
+
+// transport
+
+if ( typeof module === "object" && module && typeof module.exports === "object" ) {
+  // commonjs / browserify
+  module.exports = classie;
+} else {
+  // AMD
+  define(classie);
+}
+
+// If there is a window object, that at least has a document property,
+// define classie
+if ( typeof window === "object" && typeof window.document === "object" ) {
+  window.classie = classie;
+}
+
+
+})( window );
+
+},{}],38:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+module.exports = extend;
+function extend(origin, add) {
+  // Don't do anything if add isn't an object
+  if (!add || typeof add !== 'object') return origin;
+
+  var keys = Object.keys(add);
+  var i = keys.length;
+  while (i--) {
+    origin[keys[i]] = add[keys[i]];
+  }
+  return origin;
+}
+
+},{}],39:[function(require,module,exports){
 
 
 //
@@ -4005,7 +1950,7 @@ if (typeof Object.getOwnPropertyDescriptor === 'function') {
   exports.getOwnPropertyDescriptor = valueObject;
 }
 
-},{}],92:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4286,13 +2231,13 @@ EventEmitter.listenerCount = function(emitter, type) {
     ret = emitter._events[type].length;
   return ret;
 };
-},{"util":95}],93:[function(require,module,exports){
+},{"util":43}],41:[function(require,module,exports){
 
 // not implemented
 // The reason for having an empty file and not throwing is to allow
 // untraditional implementation of this module.
 
-},{}],94:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4503,7 +2448,7 @@ exports.extname = function(path) {
   return splitPath(path)[3];
 };
 
-},{"__browserify_process":96,"_shims":91,"util":95}],95:[function(require,module,exports){
+},{"__browserify_process":44,"_shims":39,"util":43}],43:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5048,7 +2993,7 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-},{"_shims":91}],96:[function(require,module,exports){
+},{"_shims":39}],44:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
