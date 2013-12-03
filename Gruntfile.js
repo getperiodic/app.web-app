@@ -7,7 +7,6 @@
 
 
 'use strict';
-var exec = require('child_process').exec;
 
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -67,9 +66,7 @@ module.exports = function(grunt) {
         files: [
           'Gruntfile.js',
           'test/**/*.js',
-          'lib/**/*.js',
-          'dist/public/scripts/src/*.js',
-          'dist/public/stylesheets/*.less'
+          'lib/**/*.js'
         ],
         tasks: ['lint', 'less'],
         options: {
@@ -101,10 +98,5 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['jshint', 'simplemocha']);
   grunt.registerTask('lint', 'jshint');
   grunt.registerTask('test', 'simplemocha');
-
-  grunt.event.on('watch', function(action, filepath, target) {
-    exec("browserify "+__dirname+"/dist/public/scripts/src/main.js -o "+__dirname+"/dist/public/scripts/example.js");
-    grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
-  });
 };
 

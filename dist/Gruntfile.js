@@ -7,7 +7,8 @@
 
 
 'use strict';
-var exec = require('child_process').exec;
+var exec = require('child_process').exec,
+    fs = require('fs');
 
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -53,7 +54,7 @@ module.exports = function(grunt) {
         'config/**/*.js',
         'app.js',
         'lib/**/*.js',
-        'public/scripts/**/*.js',
+        'app/resources/browserify/src/*.js',
         'test/**/*.js'
       ]
     },
@@ -63,12 +64,13 @@ module.exports = function(grunt) {
         files: [
           'Gruntfile.js',
           'controller/**/*.js',
+          'views/**/*.js',
           'test/**/*.js',
           'config/**/*.js',
           'model/**/*.js',
           'app.js',
           'package.json',
-          'public/scripts/src/*.js',
+          'app/resources/browserify/src/*.js',
           'public/stylesheets/*.less'
         ],
         tasks: ['lint', 'less'],
@@ -96,14 +98,18 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-less');
 
-
   grunt.registerTask('default', ['jshint', 'simplemocha']);
   grunt.registerTask('lint', 'jshint');
   grunt.registerTask('test', 'simplemocha');
 
+  var broswerifyFiles = fs.readdirSync(__dirname+"/app/resources/browserify/src");
+
   grunt.event.on('watch', function(action, filepath, target) {
-    exec("browserify "+__dirname+"/public/scripts/src/main.js -o "+__dirname+"/public/scripts/example.js");
-    grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
+    for(var x in broswerifyFiles){
+      exec("browserify "+__dirname+"/app/resources/browserify/src/"+broswerifyFiles[x]+" -o "+__dirname+"/public/scripts/"+broswerifyFiles[x]);
+    }
+    // exec("browserify "+__dirname+"/app/resources/browserify/src/footer.js -o "+__dirname+"/public/scripts/appfooter.js");
+    // grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
   });
 };
 

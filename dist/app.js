@@ -81,17 +81,16 @@ var init = {
 			}
 		}
 	},
-	serverStatus: function(){
-		console.log('Express server listening on port ' + app.get('port'));
-		console.log('Running in environment: '+app.get('env'));
-	},
 	useLocals: function(){
 		app.use(function(req, res, next) {
 			res.locals.token = req.session._csrf;
 			res.locals.title = '';
+			res.locals.headerjs = '';
+			res.locals.footerjs = '';
 			res.locals.flash_messages = null;
 			var userdata = req.user;
 			res.locals.user = userdata;
+			res.locals.viewHelper = require('./app/views/helpers/viewHelpers');
 			next();
 		});
 	},
@@ -99,6 +98,10 @@ var init = {
 		if ('development' === app.get('env')) {
 			app.use(express.errorHandler());
 		}
+	},
+	serverStatus: function(){
+		console.log('Express server listening on port ' + app.get('port'));
+		console.log('Running in environment: '+app.get('env'));
 	}
 };
 
@@ -121,26 +124,26 @@ app.use(express.cookieParser('asfdsfasds'));
 //use sessions
 init.useSessions();
 
-//use flash messages
-app.use(flash());
-
 //use cross script request forgery protection
 app.use(express.csrf());
+
+//use flash messages
+app.use(flash());
 
 //use userauth
 init.userAuth();
 
-//use express routing verbs
-app.use(app.router);
-
 //use app locals
 init.useLocals();
 
-//complie less to css
-app.use(require('less-middleware')({ src: __dirname + '/public' }));
+//use express routing verbs
+app.use(app.router);
 
 // development only
 init.devLogErrors();
+
+//complie less to css
+app.use(require('less-middleware')({ src: __dirname + '/public' }));
 
 //routes
 require('./app/routes/index')(app);
