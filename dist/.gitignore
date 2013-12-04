@@ -14,5 +14,7 @@ pids
 logs
 results
 
+public/temp
+
 npm-debug.log
 node_modules/
