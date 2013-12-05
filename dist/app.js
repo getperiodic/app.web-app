@@ -8,6 +8,7 @@ var express = require('express'),
 	http = require('http'),
 	path = require('path'),
 	flash = require('connect-flash'),
+	engine = require('ejs-locals'),
 	configsettings = require('./config/config'),
 	appconfig = new configsettings();
 
@@ -19,6 +20,7 @@ var express = require('express'),
 var app = express();
 
 // all environments
+app.engine('ejs', engine);
 app.set('port', appconfig.settings.get('application:port'));
 app.set('env', appconfig.settings.get('application:environment'));
 app.set('views', __dirname + '/app/views');
@@ -90,7 +92,7 @@ var init = {
 			res.locals.flash_messages = null;
 			var userdata = req.user;
 			res.locals.user = userdata;
-			res.locals.viewHelper = require('./app/views/helpers/viewHelpers');
+			res.locals.viewHelper = require('./app/views/_helpers/viewHelpers');
 			next();
 		});
 	},

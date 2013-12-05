@@ -1,16 +1,21 @@
 @import "../periodic/component.navigation-header/stylesheets/component.navigation-header.less"; 
 
 body {
-	margin-top:170px;
+	margin-top: 3em;
   	background:#efefef;
   	
   	.container{
+  		&:first-child{
+  			.row:first-child{
+  				padding-top: 8em;
+  			}
+  		}
   		.row{
   			background: #fff;
   		}	
   	}
 }
 
-a {
+a{
   color: #00B7FF;
 }
