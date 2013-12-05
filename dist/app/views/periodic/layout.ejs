@@ -33,20 +33,12 @@
 		var colspacing=(12/numOfCols);
 		%>
 		<div class="col-md-<%= colspacing %>">
-			<%= col.template  %>
 			<% 	
-				var templatefile = locals[col.template]; 
+				var templatefile = locals[col.template],
+					templatedata = eval(col.data); 
 				locals[col.wrapper]=eval(col.data); 
-				if(navigationspec){
-					// console.log(locals[col.wrapper])
-				}
-				// console.log(locals[col.data])
-				// console.log(col.data)
-				var arrayToUse=[12];
-				var ptouse="../shared/header";
-				var p2use='../dummy';
-				var p1use="dum";
 			%>
+			<%- periodicModule(col.template,templatedata) %>
 
 
 		</div>

@@ -29,7 +29,8 @@
     "periodic.component.full-width-slideshow": "0.0.9",
     "periodic.component.list-view-scroll": "0.0.9",
     "periodic.component-static.list-view": "0.0.7",
-    "periodic.component-static.media-list-view": "0.0.7"
+    "periodic.component-static.media-list-view": "0.0.7",
+    "periodic.layout.generate.ejs-locals": "~1.0.3"
   },
   "devDependencies": {
     "grunt": "0.4.0",

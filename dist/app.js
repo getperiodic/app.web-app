@@ -8,7 +8,7 @@ var express = require('express'),
 	http = require('http'),
 	path = require('path'),
 	flash = require('connect-flash'),
-	engine = require('ejs-locals'),
+	engine = require('periodic.layout.generate.ejs-locals'),
 	configsettings = require('./config/config'),
 	appconfig = new configsettings();
 
