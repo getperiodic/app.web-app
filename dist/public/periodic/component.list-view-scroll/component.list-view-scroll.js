@@ -18,9 +18,7 @@
  */
 
 'use strict';
-
-var Modernizr = require('browsernizr'),
-	classie = require('classie'),
+var classie = require('classie'),
 	extend = require('util-extend'),
 	ejs = require('ejs'),
 	events = require('events'),
@@ -44,22 +42,18 @@ var listViewOnScroll = function(config){
 			// If we were to use the value of 1, the animation would only be triggered when we see all of the item in the viewport (100% of it)
 			viewportFactor : 0.2,
 			idSelector: 'p_c_lvs-id',
-			sectionClass: '.p_c_lvs-section'
+			sectionClass: 'p_c_lvs-section'
 		};
 		options = extend( defaults,options );
 		// console.log("options",options);
 		didScroll = false,
 		el = document.getElementById( options.idSelector ),
-		sections = Array.prototype.slice.call( el.querySelectorAll( options.sectionClass ) );
+		sections = el.getElementsByClassName( options.sectionClass );
 
-		if( Modernizr.touch ) {return;}
-
-		// the sections already shown...
-		sections.forEach( function( el, i ) {
-			if( !_inViewport( el ) ) {
-				classie.add( el, 'p_c_lvs-init' );
-			}
-		} );
+		if(('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch) {
+			// console.log("has touch");
+			return;
+		}
 
 		function scrollHandler() {
 			if( !didScroll ) {
@@ -83,7 +77,6 @@ var listViewOnScroll = function(config){
 
 		window.addEventListener( 'scroll', scrollHandler.bind(this), false );
 		window.addEventListener( 'resize', resizeHandler.bind(this), false );
-
 	};
 
 	function _getViewportH() {
@@ -134,18 +127,21 @@ var listViewOnScroll = function(config){
 		return (elTop + elH * h) <= viewed && (elBottom) >= scrolled;
 	}
 	function _scrollPage(options) {
-		sections.forEach( function( el, i ) {
-
-			if( _inViewport( el, options.viewportFactor ) ) {
-				classie.add( el, 'p_c_lvs-animate' );
-				// self.emit("sectionInView",i);
+		for(var x in sections){
+			if( _inViewport( sections[x], options.viewportFactor ) && (typeof sections[x] === "object")) {
+				classie.add( sections[x], 'p_c_lvs-animate' );
+				self.emit("sectionInView",x);
 			}
 			else {
 				// this add class init if it doesn't have it. This will ensure that the items initially in the viewport will also animate on scroll
-				classie.add( el, 'p_c_lvs-init' );
-				classie.remove( el, 'p_c_lvs-animate' );
+				if(typeof sections[x] === "object"){
+					classie.add( sections[x], 'p_c_lvs-init' );
+					classie.remove( sections[x], 'p_c_lvs-animate' );
+					self.emit("sectionOutView",x);
+				}
 			}
-		});
+		}
+
 		didScroll = false;
 	}
 };

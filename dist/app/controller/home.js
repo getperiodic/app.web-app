@@ -4,7 +4,6 @@ var path = require('path'),
 	sampledata = require('../resources/sample/sampledata');
 
 exports.index = function(req, res, next){
-	console.log("__dirname",path.resolve(__dirname,"../views/periodic/samplelayout.json"));
 	var pageData = {
 		title: 'Home page',
 		page: {name:'home'},
@@ -25,9 +24,9 @@ exports.page = function(req, res, next){
 			slideshowdata: sampledata.sample_content,
 			staticonedata: sampledata.sample_staticcontent,
 			statictwodata: sampledata.sample_staticcontent,
-			listviewscrolldata: sampledata.sample_content
-			/*,
-			headerjs: ["/scripts/page-index.js"]*/
+			listviewscrolldata: sampledata.sample_content_scrolllist,
+			staticbottomlist: sampledata.sample_staticcontentlist,
+			headerjs: ["/scripts/samplepage-page.js"]
 		},
 		headers = {
 			'Cache-Control':'max-age=900, public'

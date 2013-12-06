@@ -15,15 +15,13 @@
 					"sectiontype":"container",
 					"cols":[{
 						"template":"../../../public/periodic/component.navigation-header/templates/component.navigation-header",
-						"data":"headerdata",
-						"wrapper":"navigationspec"
+						"data":"headerdata"
 					}]
 				},{
 					"sectiontype":"container",
 					"cols":[{
-						"template":"../../../public/periodic/component.full-width-slideshow/templates/component.full-width_slideshow",
-						"data":"slideshowdata",
-						"wrapper":"contentspec"
+						"template":"../../../public/periodic/component.full-width-slideshow/templates/component.full-width-slideshow",
+						"data":"slideshowdata"
 					}],
 					"attributes":{
 						"class":"extraClassContainer"
@@ -33,40 +31,33 @@
 					"cols":[{
 						"template":"../../../public/periodic/component-static.media-list-view/templates/component-static.media-list-view",
 						"data":"staticonedata",
-						"wrapper":"contentspec",
 						"attributes":{
 							"class":"extraClass"
 						}
 					},{
 						"template":"../../../public/periodic/component-static.media-list-view/templates/component-static.media-list-view",
-						"data":"statictwodata",
-						"wrapper":"contentspec"
+						"data":"statictwodata"
 					}]
 				},{
 					"sectiontype":"container",
 					"cols":[{
 						"template":"../../../public/periodic/component.list-view-scroll/templates/component.list-view-scroll",
-						"data":"listviewscrolldata",
-						"wrapper":"contentspec"
+						"data":"listviewscrolldata"
 					}]
 				},{
 					"sectiontype":"container",
 					"cols":[{
 						"template":"../../../public/periodic/component-static.list-view/templates/component.list-view-scroll",
-						"data":"statictwodata",
-						"wrapper":"contentspec"
+						"data":"staticbottomlist"
 					},{
 						"template":"../../../public/periodic/component-static.list-view/templates/component.list-view-scroll",
-						"data":"statictwodata",
-						"wrapper":"contentspec"
+						"data":"staticbottomlist"
 					},{
 						"template":"../../../public/periodic/component-static.list-view/templates/component.list-view-scroll",
-						"data":"statictwodata",
-						"wrapper":"contentspec"
+						"data":"staticbottomlist"
 					},{
 						"template":"../../../public/periodic/component-static.list-view/templates/component.list-view-scroll",
-						"data":"statictwodata",
-						"wrapper":"contentspec"
+						"data":"staticbottomlist"
 					}]
 				}
 			]

@@ -26,8 +26,8 @@
     "passport-local": "~0.1.6",
     "passport": "~0.1.17",
     "periodic.component.navigation-header": "0.0.9",
-    "periodic.component.full-width-slideshow": "0.0.9",
-    "periodic.component.list-view-scroll": "0.0.9",
+    "periodic.component.full-width-slideshow": "0.1.2",
+    "periodic.component.list-view-scroll": "0.1.1",
     "periodic.component-static.list-view": "0.0.7",
     "periodic.component-static.media-list-view": "0.0.7",
     "periodic.layout.generate.ejs-locals": "~1.0.3"
