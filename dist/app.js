@@ -99,6 +99,11 @@ var init = {
 			next();
 		});
 	},
+	useCSRF: function(){
+		if(appconfig.settings.get('sessions:enabled')){
+			app.use(express.csrf());
+		}
+	},
 	logErrors: function(){
 		//log errors
 		app.use(function(err, req, res, next){
@@ -146,7 +151,7 @@ app.use(express.cookieParser(appconfig.settings.get('cookies:cookieParser')));
 init.useSessions();
 
 //use cross script request forgery protection
-app.use(express.csrf());
+init.useCSRF();
 
 //use flash messages
 app.use(flash());
