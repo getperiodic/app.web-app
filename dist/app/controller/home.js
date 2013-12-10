@@ -1,9 +1,12 @@
 'use strict';
-var path = require('path'),
-	periodic = require('../helpers/periodic.controller'),
+
+var controller_resource=false,
+	logger,
+	controllerHelper,
+	path = require('path'),
 	sampledata = require('../resources/sample/sampledata');
 
-exports.index = function(req, res, next){
+var index = function(req, res, next){
 	var pageData = {
 		title: 'Home page',
 		page: {name:'home'},
@@ -14,7 +17,7 @@ exports.index = function(req, res, next){
 	res.render('home/index', pageData);
 };
 
-exports.page = function(req, res, next){
+var page = function(req, res, next){
 	var file = path.resolve(__dirname,"../views/periodic/samplelayout.json"),
 		pageData = {
 			title: 'Random page',
@@ -31,13 +34,26 @@ exports.page = function(req, res, next){
 		headers = {
 			'Cache-Control':'max-age=900, public'
 		};
-	periodic.renderLayout({
-			req:req,
-			res:res,
-			next:next,
-			file:file,
-			headers:headers,
-			pagedata:pageData
-		});
+	controllerHelper.renderLayout({
+		req:req,
+		res:res,
+		next:next,
+		file:file,
+		headers:headers,
+		pagedata:pageData
+	});
 };
 
+var controller = function(resource){
+	controller_resource= resource;
+	logger = resource.logger;
+	controllerHelper = resource.controllerHelper;
+
+	return{
+		index: index,
+		page: page
+	};
+};
+
+
+module.exports = controller;

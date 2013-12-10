@@ -10,7 +10,8 @@ var express = require('express'),
 	flash = require('connect-flash'),
 	engine = require('periodic.layout.generate.ejs-locals'),
 	configsettings = require('./config/config'),
-	appconfig = new configsettings();
+	appconfig = new configsettings(),
+	logger = require('./config/logger');
 
 	if(process.env.NODE_ENV !== 'production'){
 		require('longjohn');
@@ -85,7 +86,9 @@ var init = {
 	},
 	useLocals: function(){
 		app.use(function(req, res, next) {
-			res.locals.token = req.session._csrf;
+			if(appconfig.settings.get('sessions:enabled')){
+				res.locals.token = req.session._csrf;
+			}
 			res.locals.title = '';
 			res.locals.headerjs = '';
 			res.locals.footerjs = '';
@@ -96,14 +99,30 @@ var init = {
 			next();
 		});
 	},
-	devLogErrors: function(){
-		if ('development' === app.get('env')) {
-			app.use(express.errorHandler());
-		}
+	logErrors: function(){
+		//log errors
+		app.use(function(err, req, res, next){
+			logger.error(err.stack);
+			next(err);
+		});
+
+		//send client errors
+		//catch all errors
+		app.use(function (err, req, res, next) {
+			// console.log("err.name",err.name);
+			if (req.xhr) {
+				res.send(500, { error: 'Something blew up!' });
+			}
+			else {
+				res.status(500);
+				res.render('errors/500', { error: err });
+			}
+		});
 	},
 	serverStatus: function(){
 		console.log('Express server listening on port ' + app.get('port'));
 		console.log('Running in environment: '+app.get('env'));
+		logger.info('looks good');
 	}
 };
 
@@ -142,12 +161,12 @@ init.useLocals();
 app.use(app.router);
 
 // development only
-init.devLogErrors();
+init.logErrors();
 
 //complie less to css
 app.use(require('less-middleware')({ src: __dirname + '/public' }));
 
 //routes
-require('./app/routes/index')(app);
+require('./app/routes/index')(app,logger);
 
 http.createServer(app).listen(app.get('port'), init.serverStatus());

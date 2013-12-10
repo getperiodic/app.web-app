@@ -11,10 +11,14 @@ lib-cov
 *.gz
 
 pids
-logs
+logs/*
+!logs
+
 results
 
 public/temp
 
 npm-debug.log
-node_modules/
+node_modules/*
+node_modules*
+node_modules

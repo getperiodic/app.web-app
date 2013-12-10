@@ -1,8 +1,6 @@
 'use strict';
 exports.includeJavaScripts = function(scripts){
 	if(scripts){
-					console.log("typeof scripts",typeof scripts);
-
 		switch (typeof scripts){
 			case 'array':
 			case 'object':

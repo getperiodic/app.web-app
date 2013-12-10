@@ -1,8 +1,12 @@
 'use strict';
 
-var home = require('../controller/home');
+exports = module.exports = function(app,options){
+	var home = require('../controller/home')({
+		cache: options.cache,
+		logger: options.logger,
+		controllerHelper: options.controllerHelper
+	});
 
-exports = module.exports = function(app){
 	app.get('/',home.index);
 	app.get('/page',home.page);
 };

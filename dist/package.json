@@ -2,7 +2,7 @@
   "title": "Periodic Boilerplate web-app",
   "name": "periodic-web-app",
   "description": "Periodic is an open source framework that optimizes the process used to develop new user interfaces and components for web based publications.",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "main": "app.js",
   "engines": {
@@ -11,6 +11,7 @@
   "scripts": {
     "test": "mocha",
     "appdev": "nodemon app.js --env development --port 3030",
+    "webapp": "nodemon app.js --env production --port 80",
     "watch": "grunt watch"
   },
   "dependencies": {
@@ -30,7 +31,9 @@
     "periodic.component.list-view-scroll": "0.1.1",
     "periodic.component-static.list-view": "0.0.7",
     "periodic.component-static.media-list-view": "0.0.7",
-    "periodic.layout.generate.ejs-locals": "~1.0.3"
+    "periodic.layout.generate.ejs-locals": "~1.0.3",
+    "winston": "~0.7.2",
+    "tinycache": "~0.1.1"
   },
   "devDependencies": {
     "grunt": "0.4.0",

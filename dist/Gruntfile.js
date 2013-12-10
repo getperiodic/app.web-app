@@ -53,7 +53,9 @@ module.exports = function(grunt) {
         'app/helpers/*.js',
         'test/**/*.js',
         'config/**/*.js',
+        'model/**/*.js',
         'app.js',
+        'package.json',
         'lib/**/*.js',
         'app/resources/browserify/src/*.js',
         'test/**/*.js'
