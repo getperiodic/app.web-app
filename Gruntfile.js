@@ -55,7 +55,11 @@ module.exports = function(grunt) {
     copy: {
       main: {
         files: [
-          {expand: true,cwd: 'dist', src: ['**'], dest: '../../periodic/app.web-app/'},//
+          {expand: true,cwd: 'dist', src: ['.npmignore'], dest: '../../periodic/app.web-app/'},
+          {expand: true,cwd: 'dist', src: ['.jshintrc'], dest: '../../periodic/app.web-app/'},
+          {expand: true,cwd: 'dist', src: ['.gitignore'], dest: '../../periodic/app.web-app/'},
+          {expand: true,cwd: 'dist', src: ['.nodemonignore'], dest: '../../periodic/app.web-app/'},
+          {expand: true,cwd: 'dist', src: ['**'], dest: '../../periodic/app.web-app/'}
         ]
       }
     },
