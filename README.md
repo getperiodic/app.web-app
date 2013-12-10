@@ -9,6 +9,10 @@ Boilerplate web app
 ### Installing nodemon
     $ npm install nodemon -g
     $ npm install grunt-cli -g
+    
+## Installation
+
+    $ npm install periodic.app.web-app
 
 ## Starting App
 Hop into the app directory (the app gets copied via a grunt task), install dependencies for the app, create a log directory, fire up the app.
