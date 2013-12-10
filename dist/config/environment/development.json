@@ -1,17 +1,20 @@
 {
-	"name": "Periodic Web App[dev]",
+	"name": "Periodic Web Client[dev]",
 	"version": "0.0.1",
 	"application":{
 		"port": "3331",
 		"environment": "development"
 	},
+	"cookies":{
+		"cookieParser":"asdfsfa"
+	},
 	"sessions":{
-		"enabled":true,
+		"enabled":false,
 		"type":"mongo"
 	},
 	"userauth":{
-		"enabled":true,
-		"rememberme":true,
-		"passport":true
+		"enabled":false,
+		"rememberme":false,
+		"passport":false
 	}
 }

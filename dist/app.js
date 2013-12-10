@@ -140,7 +140,7 @@ app.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/publ
 app.use(express.methodOverride());
 
 //use cookies
-app.use(express.cookieParser('asfdsfasds'));
+app.use(express.cookieParser(appconfig.settings.get('cookies:cookieParser')));
 
 //use sessions
 init.useSessions();
